@@ -48,6 +48,7 @@
 - [ ] Shooter projectiles use 8 damage, 250 px/s speed, and disappear on player hit, range, or arena bounds.
 - [ ] Enemy projectile hits reduce player HP once per projectile.
 - [ ] Enemy projectiles and active player projectiles are cleared between waves.
+- [ ] Projectile collections are empty after Victory or Defeat; brief explosion/sword visuals finish and destroy themselves safely.
 - [ ] Player HP is visible as `HP: current / 100`.
 - [ ] Each enemy's contact damage uses its config and an 800 ms per-enemy cooldown.
 - [ ] Player and active enemies are separated on contact; the player cannot pass through them.
@@ -72,5 +73,8 @@
 - [ ] Movement, aiming, firing, AI, and damage stop after Victory or Defeat.
 - [ ] No projectile, explosion, or melee damage continues after Victory or Defeat.
 - [ ] R restarts `BattleScene` at Wave 1 with full player/enemy HP, no boss, and laser selected.
+- [ ] Restart after boss phase leaves no stale Boss HP, `Wave: Boss`, transition text, or prior projectiles.
+- [ ] Full flow succeeds in one run: StartScene → Waves 1–3 → Boss → Victory.
+- [ ] Full defeat flow succeeds and R returns to a fresh Wave 1.
 - [ ] Static JSON files parse successfully.
 - [ ] Git working tree is clean after commit.

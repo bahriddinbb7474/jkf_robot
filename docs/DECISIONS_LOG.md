@@ -69,3 +69,10 @@
 - Clearing Wave 3 enters the existing 750 ms transition, clears projectiles, and then replaces the shared enemy array with one boss.
 - Boss HUD is text-only and visible only while the boss is active; the normal wave/enemy HUD changes to `Wave: Boss` and `Enemies: 1`.
 - Victory is reserved for boss death. R restarts the entire prototype at Wave 1 and clears boss state/projectiles.
+
+## Stage 3-D
+
+- User-verified Stage 3 balance is retained without code changes: basic 40/70/10, fast 25/115/8, shooter 35/55/8/1200, and boss 180/35/15/12/1400 (HP/speed/contact/projectile/cooldown as applicable).
+- Enemy and boss behavior values remain sourced from `data/static/enemies.json`; AI code keeps only presentation/steering constants.
+- Stage 3 closes with the direct `StartScene` to `BattleScene` prototype flow. Player creation and local persistence are deferred to an explicitly approved Stage 4.
+- Existing wave, boss, projectile, victory/defeat, and restart cleanup paths are accepted as the Stage 3 baseline.

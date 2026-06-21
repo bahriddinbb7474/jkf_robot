@@ -4,8 +4,8 @@ Each stage requires explicit approval before work starts.
 
 1. **Stage 0 — Foundation:** tooling, structure, documents, data stubs, and empty browser launch.
 2. **Stage 1 — Battle prototype:** minimal movement, aiming, arena, and battle outcome.
-3. **Stage 2 — Weapons (completed locally; pending approved push):** laser, rocket, and sword behavior.
-4. **Stage 3 — Enemies and boss:** basic enemy variants and one boss.
+3. **Stage 2 — Weapons (completed and pushed):** laser, rocket, and sword behavior.
+4. **Stage 3 — Enemies and boss (completed locally; pending approved push):** basic/fast/shooter waves and one boss.
 5. **Stage 4 — Players and save:** local player profiles and progress persistence.
 6. **Stage 5 — Garage:** choose owned permanent robot parts.
 7. **Stage 6 — Shop:** spend rewards on permanent parts.
