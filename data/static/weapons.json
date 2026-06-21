@@ -22,11 +22,11 @@
   },
   {
     "id": "sword_basic",
-    "name": "Basic Sword",
+    "name": "Sword",
     "type": "sword",
-    "damage": 20,
-    "cooldownMs": 600,
-    "range": 70,
+    "damage": 15,
+    "cooldownMs": 450,
+    "range": 80,
     "arcDegrees": 90,
     "price": 100
   }

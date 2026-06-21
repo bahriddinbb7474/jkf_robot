@@ -10,15 +10,21 @@ import type { Weapon } from '../types/Weapon';
 
 const WEAPONS = weaponsData as Weapon[];
 const DEFAULT_WEAPON_ID = 'laser_basic';
-const PLACEHOLDER_MESSAGES: Record<string, string> = {
-  sword_basic: 'Sword not implemented yet - Stage 2-C',
-};
-
 const MUZZLE_OFFSET = 38;
+
+export interface MeleeAttackEvent {
+  x: number;
+  y: number;
+  angle: number;
+  range: number;
+  arcDegrees: number;
+  damage: number;
+}
 
 export class WeaponSystem {
   private projectiles: Projectile[] = [];
   private pendingExplosions: ExplosionEvent[] = [];
+  private pendingMeleeAttacks: MeleeAttackEvent[] = [];
   private nextShotAt = 0;
   private wasPointerDown = false;
   private activeWeaponId = DEFAULT_WEAPON_ID;
@@ -30,8 +36,8 @@ export class WeaponSystem {
     private readonly scene: Phaser.Scene,
     private readonly owner: PlayerRobot,
     private readonly arenaBounds: Phaser.Geom.Rectangle,
-    private readonly onPlaceholderMessage?: (message: string) => void,
     private readonly onExplosionCreated?: (explosion: ExplosionEvent) => void,
+    private readonly onMeleeAttackCreated?: (attack: MeleeAttackEvent) => void,
   ) {}
 
   update(
@@ -83,6 +89,12 @@ export class WeaponSystem {
     return explosions;
   }
 
+  consumeMeleeAttackEvents(): MeleeAttackEvent[] {
+    const attacks = [...this.pendingMeleeAttacks];
+    this.pendingMeleeAttacks = [];
+    return attacks;
+  }
+
   explodeProjectile(projectile: Projectile): ExplosionEvent | null {
     const explosion = projectile.explode();
 
@@ -97,8 +109,18 @@ export class WeaponSystem {
     const weapon = this.getActiveWeapon();
 
     if (weapon.type === 'sword') {
+      const attack: MeleeAttackEvent = {
+        x: this.owner.x,
+        y: this.owner.y,
+        angle: this.owner.getAimAngle(),
+        range: weapon.range ?? 80,
+        arcDegrees: weapon.arcDegrees ?? 90,
+        damage: weapon.damage,
+      };
+
+      this.pendingMeleeAttacks.push(attack);
+      this.onMeleeAttackCreated?.(attack);
       this.nextShotAt = time + weapon.cooldownMs;
-      this.onPlaceholderMessage?.(PLACEHOLDER_MESSAGES[weapon.id] ?? '');
       return;
     }
 

@@ -38,6 +38,10 @@ export class PlayerRobot extends Phaser.GameObjects.Container {
     );
   }
 
+  getAimAngle(): number {
+    return this.aimIndicator.rotation;
+  }
+
   get health(): number {
     return this.currentHealth;
   }

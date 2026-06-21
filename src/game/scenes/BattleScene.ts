@@ -5,7 +5,7 @@ import type { ExplosionEvent } from '../entities/Projectile';
 import { CombatSystem } from '../systems/CombatSystem';
 import { EnemyAISystem } from '../systems/EnemyAISystem';
 import { MovementSystem, type MovementKeys } from '../systems/MovementSystem';
-import { WeaponSystem } from '../systems/WeaponSystem';
+import { WeaponSystem, type MeleeAttackEvent } from '../systems/WeaponSystem';
 
 const ARENA = new Phaser.Geom.Rectangle(40, 70, 880, 430);
 const GRID_SIZE = 40;
@@ -29,7 +29,6 @@ export class BattleScene extends Phaser.Scene {
   private combatSystem?: CombatSystem;
   private healthText?: Phaser.GameObjects.Text;
   private weaponText?: Phaser.GameObjects.Text;
-  private placeholderText?: Phaser.GameObjects.Text;
   private restartKey?: Phaser.Input.Keyboard.Key;
   private weaponSlotKeys?: Record<WeaponSlot, Phaser.Input.Keyboard.Key>;
   private battleState: BattleState = 'active';
@@ -44,7 +43,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawArena();
 
     this.add
-      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 2-B', {
+      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 2-C', {
         color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -91,8 +90,8 @@ export class BattleScene extends Phaser.Scene {
       this,
       this.playerRobot,
       ARENA,
-      (message) => this.showWeaponPlaceholder(message),
       (explosion) => this.showExplosion(explosion),
+      (attack) => this.showSwordAttack(attack),
     );
     this.combatSystem = new CombatSystem(
       this.enemy,
@@ -122,13 +121,6 @@ export class BattleScene extends Phaser.Scene {
         fontStyle: 'bold',
       })
       .setOrigin(0, 0);
-    this.placeholderText = this.add
-      .text(ARENA.centerX, ARENA.bottom + 14, '', {
-        color: '#ffcf8b',
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '16px',
-      })
-      .setOrigin(0.5, 0);
     this.updateHealthText();
     this.updateWeaponText();
 
@@ -174,6 +166,9 @@ export class BattleScene extends Phaser.Scene {
       );
       for (const explosion of this.weaponSystem.consumeExplosionEvents()) {
         this.applyExplosionDamage(explosion);
+      }
+      for (const attack of this.weaponSystem.consumeMeleeAttackEvents()) {
+        this.applySwordDamage(attack);
       }
     }
 
@@ -275,23 +270,6 @@ export class BattleScene extends Phaser.Scene {
     this.weaponText.setText(`Weapon: ${label}`);
   }
 
-  private showWeaponPlaceholder(message: string): void {
-    if (!this.placeholderText) {
-      return;
-    }
-
-    this.placeholderText.setText(message);
-
-    this.time.delayedCall(1200, () => {
-      if (
-        this.placeholderText?.active &&
-        this.placeholderText.text === message
-      ) {
-        this.placeholderText.setText('');
-      }
-    });
-  }
-
   private showExplosion(explosion: ExplosionEvent): void {
     const blast = this.add.circle(
       explosion.x,
@@ -335,12 +313,75 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  private showSwordAttack(attack: MeleeAttackEvent): void {
+    const offset = attack.range * 0.6;
+    const centerX = attack.x + Math.cos(attack.angle) * offset;
+    const centerY = attack.y + Math.sin(attack.angle) * offset;
+    const slash = this.add.rectangle(
+      centerX,
+      centerY,
+      attack.range,
+      attack.range * 0.55,
+      0xfff1a6,
+      0.3,
+    );
+    slash.rotation = attack.angle;
+    slash.setStrokeStyle(2, 0xf4d35e, 0.9);
+
+    this.tweens.add({
+      targets: slash,
+      alpha: 0,
+      scaleX: 1.15,
+      scaleY: 0.9,
+      duration: 140,
+      onComplete: () => slash.destroy(),
+    });
+  }
+
+  private applySwordDamage(attack: MeleeAttackEvent): void {
+    if (!this.enemy?.active) {
+      return;
+    }
+
+    const toEnemy = new Phaser.Math.Vector2(
+      this.enemy.x - attack.x,
+      this.enemy.y - attack.y,
+    );
+    const distance = toEnemy.length();
+
+    if (distance > attack.range + this.enemy.collisionRadius) {
+      return;
+    }
+
+    const attackDirection = new Phaser.Math.Vector2(
+      Math.cos(attack.angle),
+      Math.sin(attack.angle),
+    );
+    const enemyDirection =
+      distance > 0 ? toEnemy.normalize() : attackDirection.clone();
+    const angleDelta = Phaser.Math.Angle.Wrap(
+      enemyDirection.angle() - attackDirection.angle(),
+    );
+    const maxDelta = Phaser.Math.DegToRad(attack.arcDegrees / 2);
+
+    if (Math.abs(angleDelta) > maxDelta) {
+      return;
+    }
+
+    this.enemy.takeDamage(attack.damage);
+
+    if (this.enemy.health <= 0) {
+      this.enemy.destroy(true);
+      this.endBattle('victory');
+    }
+  }
+
   private createMovementKeys(): MovementKeys {
     const keyboard = this.input.keyboard;
 
     if (!keyboard) {
       throw new Error(
-        'Keyboard input is required for the Stage 2-B prototype.',
+        'Keyboard input is required for the Stage 2-C prototype.',
       );
     }
 

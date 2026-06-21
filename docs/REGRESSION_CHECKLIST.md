@@ -26,7 +26,11 @@
 - [ ] Rocket cooldown is noticeably longer than laser cooldown.
 - [ ] Rocket explosion visual appears on hit or expiry.
 - [ ] Enemy takes damage from rocket explosion radius.
-- [ ] Sword selection does not crash the game and only shows a placeholder.
+- [ ] Sword melee attack works when selected.
+- [ ] Sword only hits a nearby enemy.
+- [ ] Sword does not hit an enemy behind the player.
+- [ ] Sword cooldown prevents melee spam.
+- [ ] Sword attack visual appears briefly in front of the player.
 - [ ] Exactly one enemy is visible with HP and moves directly toward the player.
 - [ ] Player HP is visible as `HP: current / 100`.
 - [ ] Enemy contact reduces player HP by 10 no faster than once per 800 ms.
