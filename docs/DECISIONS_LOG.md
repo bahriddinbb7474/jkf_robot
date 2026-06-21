@@ -27,3 +27,11 @@
 - `WeaponSystem` owns fire cooldown and projectile lifetime; `CombatSystem` owns hit damage and dummy death.
 - The prototype uses `laser_basic` values: 10 damage, 300 ms cooldown, 600 px/s projectile speed, and 900 px range.
 - The only enemy is a stationary 40 HP dummy; no enemy AI or player damage is introduced.
+
+## Stage 1-C
+
+- The player has 100 HP; the BattleScene HUD is the only HP presentation.
+- The single enemy uses direct normalized movement toward the player at 70 px/s; no pathfinding or other AI is introduced.
+- Contact deals 10 damage with an 800 ms cooldown managed by `CombatSystem`.
+- Battle state is explicitly `active`, `victory`, or `defeat`; all movement and combat updates stop outside `active`.
+- End-state projectiles are removed, and R restarts the same scene with fresh state.

@@ -4,8 +4,9 @@
     "name": "Basic Bot",
     "kind": "basic",
     "health": 40,
-    "speed": 100,
-    "damage": 5
+    "speed": 70,
+    "damage": 10,
+    "contactDamageCooldownMs": 800
   },
   {
     "id": "bot_fast",

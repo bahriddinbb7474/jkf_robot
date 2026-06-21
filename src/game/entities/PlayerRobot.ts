@@ -5,9 +5,16 @@ const ROBOT_BOUNDS_SIZE = 64;
 
 export class PlayerRobot extends Phaser.GameObjects.Container {
   private readonly aimIndicator: Phaser.GameObjects.Container;
+  private currentHealth: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    readonly maxHealth: number,
+  ) {
     super(scene, x, y);
+    this.currentHealth = maxHealth;
 
     const body = scene.add.rectangle(0, 0, ROBOT_SIZE, ROBOT_SIZE, 0x32b8d9);
     body.setStrokeStyle(3, 0xbcefff);
@@ -28,6 +35,27 @@ export class PlayerRobot extends Phaser.GameObjects.Container {
       this.y,
       worldX,
       worldY,
+    );
+  }
+
+  get health(): number {
+    return this.currentHealth;
+  }
+
+  takeDamage(amount: number): void {
+    this.currentHealth = Phaser.Math.Clamp(
+      this.currentHealth - amount,
+      0,
+      this.maxHealth,
+    );
+  }
+
+  getHitBounds(): Phaser.Geom.Rectangle {
+    return new Phaser.Geom.Rectangle(
+      this.x - ROBOT_SIZE / 2,
+      this.y - ROBOT_SIZE / 2,
+      ROBOT_SIZE,
+      ROBOT_SIZE,
     );
   }
 }

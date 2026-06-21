@@ -1,7 +1,7 @@
 # Current State
 
-- Project status: foundation and first minimal combat interaction available.
-- Current stage: Stage 1-B — mouse aim, basic laser, and one stationary dummy enemy.
-- Available now: bounded WASD movement, mouse aim indicator, cooldown-limited laser projectiles, dummy HP/damage/death, and a victory message.
-- Enemy AI, player HP, additional weapons/enemies, missions, progression, and persistence are not implemented.
-- Next work requires explicit architect/user approval; do not begin Stage 1-C or Stage 2 automatically.
+- Project status: the first minimal win/lose combat prototype is complete.
+- Current stage: Stage 1-C — player HP, simple enemy chase/contact damage, battle end states, and restart.
+- Available now: bounded WASD movement, mouse aim, basic laser combat, one chasing enemy, player/enemy HP, victory/defeat, and R restart.
+- Additional weapons/enemies, missions, rewards, progression, and persistence are not implemented.
+- Stage 1 is complete at prototype level. Do not begin Stage 2 without explicit architect/user approval.

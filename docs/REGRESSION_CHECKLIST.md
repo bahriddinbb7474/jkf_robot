@@ -16,8 +16,13 @@
 - [ ] Left click fires a laser toward the pointer.
 - [ ] Laser cooldown prevents firing faster than once per 300 ms.
 - [ ] Laser projectiles are removed on hit, range limit, or leaving the arena.
-- [ ] Exactly one stationary dummy enemy is visible with HP.
+- [ ] Exactly one enemy is visible with HP and moves directly toward the player.
 - [ ] Laser hits reduce dummy HP by 10.
-- [ ] Dummy disappears at 0 HP and the Stage 1-B completion text appears.
+- [ ] Player HP is visible as `HP: current / 100`.
+- [ ] Enemy contact reduces player HP by 10 no faster than once per 800 ms.
+- [ ] Enemy disappears at 0 HP and the Victory state appears.
+- [ ] Player reaching 0 HP shows the Defeat state.
+- [ ] Movement, aiming, firing, AI, and damage stop after Victory or Defeat.
+- [ ] R restarts `BattleScene` with full player/enemy HP.
 - [ ] Static JSON files parse successfully.
 - [ ] Git working tree is clean after commit.

@@ -7,4 +7,5 @@ export interface Enemy {
   health: number;
   speed: number;
   damage: number;
+  contactDamageCooldownMs?: number;
 }

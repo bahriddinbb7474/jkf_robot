@@ -2,30 +2,43 @@ import Phaser from 'phaser';
 import { EnemyBot } from '../entities/EnemyBot';
 import { PlayerRobot } from '../entities/PlayerRobot';
 import { CombatSystem } from '../systems/CombatSystem';
+import { EnemyAISystem } from '../systems/EnemyAISystem';
 import { MovementSystem, type MovementKeys } from '../systems/MovementSystem';
 import { BASIC_LASER, WeaponSystem } from '../systems/WeaponSystem';
 
 const ARENA = new Phaser.Geom.Rectangle(40, 70, 880, 430);
 const GRID_SIZE = 40;
-const DUMMY_HEALTH = 40;
+const BATTLE_CONFIG = {
+  playerMaxHealth: 100,
+  enemyHealth: 40,
+  enemySpeed: 70,
+  enemyContactDamage: 10,
+  enemyContactCooldownMs: 800,
+} as const;
+
+type BattleState = 'active' | 'victory' | 'defeat';
 
 export class BattleScene extends Phaser.Scene {
   private movementSystem?: MovementSystem;
+  private enemyAISystem?: EnemyAISystem;
   private playerRobot?: PlayerRobot;
   private weaponSystem?: WeaponSystem;
   private combatSystem?: CombatSystem;
-  private battleComplete = false;
+  private healthText?: Phaser.GameObjects.Text;
+  private restartKey?: Phaser.Input.Keyboard.Key;
+  private battleState: BattleState = 'active';
 
   constructor() {
     super('BattleScene');
   }
 
   create(): void {
+    this.battleState = 'active';
     this.cameras.main.setBackgroundColor('#101820');
     this.drawArena();
 
     this.add
-      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 1-B', {
+      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 1-C', {
         color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -44,7 +57,12 @@ export class BattleScene extends Phaser.Scene {
       },
     );
 
-    this.playerRobot = new PlayerRobot(this, ARENA.centerX, ARENA.centerY);
+    this.playerRobot = new PlayerRobot(
+      this,
+      ARENA.centerX,
+      ARENA.centerY,
+      BATTLE_CONFIG.playerMaxHealth,
+    );
     this.movementSystem = new MovementSystem(
       this.playerRobot,
       this.createMovementKeys(),
@@ -55,7 +73,13 @@ export class BattleScene extends Phaser.Scene {
       this,
       ARENA.right - 150,
       ARENA.centerY,
-      DUMMY_HEALTH,
+      BATTLE_CONFIG.enemyHealth,
+    );
+    this.enemyAISystem = new EnemyAISystem(
+      enemy,
+      this.playerRobot,
+      ARENA,
+      BATTLE_CONFIG.enemySpeed,
     );
     this.weaponSystem = new WeaponSystem(
       this,
@@ -63,39 +87,90 @@ export class BattleScene extends Phaser.Scene {
       ARENA,
       BASIC_LASER,
     );
-    this.combatSystem = new CombatSystem(enemy, BASIC_LASER.damage, () =>
-      this.showVictory(),
+    this.combatSystem = new CombatSystem(
+      enemy,
+      this.playerRobot,
+      BASIC_LASER.damage,
+      {
+        damage: BATTLE_CONFIG.enemyContactDamage,
+        cooldownMs: BATTLE_CONFIG.enemyContactCooldownMs,
+      },
+      () => this.endBattle('victory'),
+      () => this.updateHealthText(),
+      () => this.endBattle('defeat'),
+    );
+
+    this.healthText = this.add
+      .text(ARENA.right - 12, ARENA.top + 10, '', {
+        color: '#ffffff',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '18px',
+        fontStyle: 'bold',
+      })
+      .setOrigin(1, 0);
+    this.updateHealthText();
+
+    this.restartKey = this.input.keyboard?.addKey(
+      Phaser.Input.Keyboard.KeyCodes.R,
     );
   }
 
   update(time: number, delta: number): void {
+    if (this.battleState !== 'active') {
+      if (this.restartKey && Phaser.Input.Keyboard.JustDown(this.restartKey)) {
+        this.scene.restart();
+      }
+
+      return;
+    }
+
     this.movementSystem?.update(delta);
 
     const pointer = this.input.activePointer;
     this.playerRobot?.aimAt(pointer.worldX, pointer.worldY);
-    this.weaponSystem?.update(time, delta, pointer, !this.battleComplete);
+    this.enemyAISystem?.update(delta);
+    this.weaponSystem?.update(time, delta, pointer, true);
 
     if (this.weaponSystem) {
-      this.combatSystem?.update(this.weaponSystem.getActiveProjectiles());
+      this.combatSystem?.update(time, this.weaponSystem.getActiveProjectiles());
     }
   }
 
-  private showVictory(): void {
-    this.battleComplete = true;
+  private updateHealthText(): void {
+    if (this.playerRobot && this.healthText) {
+      this.healthText.setText(
+        `HP: ${this.playerRobot.health} / ${this.playerRobot.maxHealth}`,
+      );
+    }
+  }
+
+  private endBattle(result: Exclude<BattleState, 'active'>): void {
+    if (this.battleState !== 'active') {
+      return;
+    }
+
+    this.battleState = result;
+
+    for (const projectile of this.weaponSystem?.getActiveProjectiles() ?? []) {
+      projectile.destroy();
+    }
+
+    const message =
+      result === 'victory'
+        ? 'Victory - press R to restart'
+        : 'Defeat - press R to restart';
+    const color = result === 'victory' ? '#8effb6' : '#ff9ca5';
+    const backgroundColor = result === 'victory' ? '#102b20' : '#35161b';
+
     this.add
-      .text(
-        this.scale.width / 2,
-        ARENA.centerY,
-        'Enemy destroyed - Stage 1-B complete',
-        {
-          backgroundColor: '#102b20',
-          color: '#8effb6',
-          fontFamily: 'system-ui, sans-serif',
-          fontSize: '26px',
-          fontStyle: 'bold',
-          padding: { x: 18, y: 12 },
-        },
-      )
+      .text(this.scale.width / 2, ARENA.centerY, message, {
+        backgroundColor,
+        color,
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '26px',
+        fontStyle: 'bold',
+        padding: { x: 18, y: 12 },
+      })
       .setOrigin(0.5);
   }
 
@@ -104,7 +179,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (!keyboard) {
       throw new Error(
-        'Keyboard input is required for the Stage 1-A prototype.',
+        'Keyboard input is required for the Stage 1-C prototype.',
       );
     }
 
