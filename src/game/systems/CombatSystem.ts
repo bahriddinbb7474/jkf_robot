@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { EnemyBot } from '../entities/EnemyBot';
 import { PlayerRobot } from '../entities/PlayerRobot';
-import { Projectile } from '../entities/Projectile';
+import { Projectile, type ExplosionEvent } from '../entities/Projectile';
 
 export interface ContactDamageConfig {
   damage: number;
@@ -20,12 +20,17 @@ export class CombatSystem {
     private readonly onPlayerDestroyed: () => void,
   ) {}
 
-  update(time: number, projectiles: readonly Projectile[]): void {
+  update(
+    time: number,
+    projectiles: readonly Projectile[],
+    explodeProjectile?: (projectile: Projectile) => ExplosionEvent | null,
+  ): void {
     if (!this.enemy.active) {
       return;
     }
 
     const enemyBounds = this.enemy.getHitBounds();
+    const pendingExplosions: ExplosionEvent[] = [];
 
     for (const projectile of projectiles) {
       if (
@@ -38,8 +43,42 @@ export class CombatSystem {
         continue;
       }
 
-      projectile.destroy();
-      this.enemy.takeDamage(projectile.damage);
+      if (projectile.weaponType === 'rocket') {
+        const explosion =
+          explodeProjectile?.(projectile) ?? projectile.explode();
+
+        if (explosion) {
+          pendingExplosions.push(explosion);
+        }
+      } else {
+        projectile.destroy();
+        this.enemy.takeDamage(projectile.damage);
+
+        if (this.enemy.health <= 0) {
+          this.enemy.destroy(true);
+          this.onEnemyDestroyed();
+          return;
+        }
+      }
+    }
+
+    for (const explosion of pendingExplosions) {
+      if (!this.enemy.active) {
+        return;
+      }
+
+      const distance = Phaser.Math.Distance.Between(
+        explosion.x,
+        explosion.y,
+        this.enemy.x,
+        this.enemy.y,
+      );
+
+      if (distance > explosion.radius + this.enemy.collisionRadius) {
+        continue;
+      }
+
+      this.enemy.takeDamage(explosion.damage);
 
       if (this.enemy.health <= 0) {
         this.enemy.destroy(true);

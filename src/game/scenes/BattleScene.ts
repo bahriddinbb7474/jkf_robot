@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { EnemyBot } from '../entities/EnemyBot';
 import { PlayerRobot } from '../entities/PlayerRobot';
+import type { ExplosionEvent } from '../entities/Projectile';
 import { CombatSystem } from '../systems/CombatSystem';
 import { EnemyAISystem } from '../systems/EnemyAISystem';
 import { MovementSystem, type MovementKeys } from '../systems/MovementSystem';
@@ -43,7 +44,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawArena();
 
     this.add
-      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 2-A', {
+      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 2-B', {
         color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -91,6 +92,7 @@ export class BattleScene extends Phaser.Scene {
       this.playerRobot,
       ARENA,
       (message) => this.showWeaponPlaceholder(message),
+      (explosion) => this.showExplosion(explosion),
     );
     this.combatSystem = new CombatSystem(
       this.enemy,
@@ -164,7 +166,15 @@ export class BattleScene extends Phaser.Scene {
     this.weaponSystem?.update(time, delta, pointer, true);
 
     if (this.weaponSystem) {
-      this.combatSystem?.update(time, this.weaponSystem.getActiveProjectiles());
+      this.combatSystem?.update(
+        time,
+        this.weaponSystem.getActiveProjectiles(),
+        (projectile) =>
+          this.weaponSystem?.explodeProjectile(projectile) ?? null,
+      );
+      for (const explosion of this.weaponSystem.consumeExplosionEvents()) {
+        this.applyExplosionDamage(explosion);
+      }
     }
 
     this.separatePlayerFromEnemy();
@@ -282,12 +292,55 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
+  private showExplosion(explosion: ExplosionEvent): void {
+    const blast = this.add.circle(
+      explosion.x,
+      explosion.y,
+      explosion.radius,
+      0xffb347,
+      0.28,
+    );
+    blast.setStrokeStyle(2, 0xffe0b2, 0.85);
+
+    this.tweens.add({
+      targets: blast,
+      alpha: 0,
+      scale: 1.2,
+      duration: 180,
+      onComplete: () => blast.destroy(),
+    });
+  }
+
+  private applyExplosionDamage(explosion: ExplosionEvent): void {
+    if (!this.enemy?.active) {
+      return;
+    }
+
+    const distance = Phaser.Math.Distance.Between(
+      explosion.x,
+      explosion.y,
+      this.enemy.x,
+      this.enemy.y,
+    );
+
+    if (distance > explosion.radius + this.enemy.collisionRadius) {
+      return;
+    }
+
+    this.enemy.takeDamage(explosion.damage);
+
+    if (this.enemy.health <= 0) {
+      this.enemy.destroy(true);
+      this.endBattle('victory');
+    }
+  }
+
   private createMovementKeys(): MovementKeys {
     const keyboard = this.input.keyboard;
 
     if (!keyboard) {
       throw new Error(
-        'Keyboard input is required for the Stage 1-C prototype.',
+        'Keyboard input is required for the Stage 2-B prototype.',
       );
     }
 

@@ -11,13 +11,13 @@
   },
   {
     "id": "rocket_basic",
-    "name": "Basic Rocket",
+    "name": "Rocket",
     "type": "rocket",
-    "damage": 30,
-    "cooldownMs": 1200,
-    "projectileSpeed": 420,
-    "range": 700,
-    "explosionRadius": 90,
+    "damage": 25,
+    "cooldownMs": 900,
+    "projectileSpeed": 350,
+    "range": 500,
+    "explosionRadius": 70,
     "price": 150
   },
   {

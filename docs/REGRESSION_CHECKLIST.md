@@ -21,7 +21,11 @@
 - [ ] Laser cooldown prevents firing faster than once per 300 ms.
 - [ ] Laser projectiles are removed on hit, range limit, or leaving the arena.
 - [ ] Laser still damages the enemy when laser is selected.
-- [ ] Rocket selection does not crash the game and only shows a placeholder.
+- [ ] Rocket fires on left click when selected.
+- [ ] Rocket is visibly slower than laser.
+- [ ] Rocket cooldown is noticeably longer than laser cooldown.
+- [ ] Rocket explosion visual appears on hit or expiry.
+- [ ] Enemy takes damage from rocket explosion radius.
 - [ ] Sword selection does not crash the game and only shows a placeholder.
 - [ ] Exactly one enemy is visible with HP and moves directly toward the player.
 - [ ] Player HP is visible as `HP: current / 100`.
