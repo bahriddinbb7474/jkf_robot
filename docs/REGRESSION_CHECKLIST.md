@@ -20,6 +20,8 @@
 - [ ] Laser hits reduce dummy HP by 10.
 - [ ] Player HP is visible as `HP: current / 100`.
 - [ ] Enemy contact reduces player HP by 10 no faster than once per 800 ms.
+- [ ] Player and enemy are separated on contact; the player cannot pass through the enemy.
+- [ ] Collision separation keeps the player inside the arena.
 - [ ] Enemy disappears at 0 HP and the Victory state appears.
 - [ ] Player reaching 0 HP shows the Defeat state.
 - [ ] Movement, aiming, firing, AI, and damage stop after Victory or Defeat.

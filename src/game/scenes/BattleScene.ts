@@ -22,6 +22,7 @@ export class BattleScene extends Phaser.Scene {
   private movementSystem?: MovementSystem;
   private enemyAISystem?: EnemyAISystem;
   private playerRobot?: PlayerRobot;
+  private enemy?: EnemyBot;
   private weaponSystem?: WeaponSystem;
   private combatSystem?: CombatSystem;
   private healthText?: Phaser.GameObjects.Text;
@@ -69,14 +70,14 @@ export class BattleScene extends Phaser.Scene {
       ARENA,
     );
 
-    const enemy = new EnemyBot(
+    this.enemy = new EnemyBot(
       this,
       ARENA.right - 150,
       ARENA.centerY,
       BATTLE_CONFIG.enemyHealth,
     );
     this.enemyAISystem = new EnemyAISystem(
-      enemy,
+      this.enemy,
       this.playerRobot,
       ARENA,
       BATTLE_CONFIG.enemySpeed,
@@ -88,7 +89,7 @@ export class BattleScene extends Phaser.Scene {
       BASIC_LASER,
     );
     this.combatSystem = new CombatSystem(
-      enemy,
+      this.enemy,
       this.playerRobot,
       BASIC_LASER.damage,
       {
@@ -134,6 +135,33 @@ export class BattleScene extends Phaser.Scene {
     if (this.weaponSystem) {
       this.combatSystem?.update(time, this.weaponSystem.getActiveProjectiles());
     }
+
+    this.separatePlayerFromEnemy();
+  }
+
+  private separatePlayerFromEnemy(): void {
+    if (!this.playerRobot || !this.enemy?.active) {
+      return;
+    }
+
+    const deltaX = this.playerRobot.x - this.enemy.x;
+    const deltaY = this.playerRobot.y - this.enemy.y;
+    const minimumDistance =
+      this.playerRobot.collisionRadius + this.enemy.collisionRadius;
+    const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+
+    if (distanceSquared >= minimumDistance * minimumDistance) {
+      return;
+    }
+
+    const distance = Math.sqrt(distanceSquared);
+    const normalX = distance > 0 ? deltaX / distance : -1;
+    const normalY = distance > 0 ? deltaY / distance : 0;
+    const overlap = minimumDistance - distance;
+
+    this.playerRobot.x += normalX * overlap;
+    this.playerRobot.y += normalY * overlap;
+    this.movementSystem?.clampToBounds();
   }
 
   private updateHealthText(): void {

@@ -42,6 +42,10 @@ export class PlayerRobot extends Phaser.GameObjects.Container {
     return this.currentHealth;
   }
 
+  get collisionRadius(): number {
+    return ROBOT_SIZE / 2;
+  }
+
   takeDamage(amount: number): void {
     this.currentHealth = Phaser.Math.Clamp(
       this.currentHealth - amount,

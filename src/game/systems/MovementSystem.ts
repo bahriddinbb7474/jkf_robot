@@ -33,6 +33,10 @@ export class MovementSystem {
       this.target.y += this.direction.y;
     }
 
+    this.clampToBounds();
+  }
+
+  clampToBounds(): void {
     const halfWidth = this.target.width / 2;
     const halfHeight = this.target.height / 2;
 

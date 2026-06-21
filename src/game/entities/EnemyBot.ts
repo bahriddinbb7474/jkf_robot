@@ -37,6 +37,10 @@ export class EnemyBot extends Phaser.GameObjects.Container {
     return this.currentHealth;
   }
 
+  get collisionRadius(): number {
+    return ENEMY_SIZE / 2;
+  }
+
   takeDamage(amount: number): void {
     this.currentHealth = Phaser.Math.Clamp(
       this.currentHealth - amount,
