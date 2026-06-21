@@ -1,0 +1,13 @@
+{
+  "startingMoney": 100,
+  "basePlayerStats": {
+    "health": 100,
+    "speed": 220
+  },
+  "rewards": {
+    "victory": 50,
+    "defeat": 10,
+    "bonusQuestion": 15
+  },
+  "defaultVolume": 0.7
+}

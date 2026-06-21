@@ -1,0 +1,7 @@
+[
+  { "id": "body_basic", "name": "Basic Body", "slot": "body", "price": 0 },
+  { "id": "head_basic", "name": "Basic Head", "slot": "head", "price": 0 },
+  { "id": "legs_basic", "name": "Basic Legs", "slot": "legs", "price": 0 },
+  { "id": "armor_basic", "name": "Basic Armor", "slot": "armor", "price": 0 },
+  { "id": "color_basic", "name": "Steel Blue", "slot": "color", "price": 0 }
+]

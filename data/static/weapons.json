@@ -1,0 +1,26 @@
+[
+  {
+    "id": "laser_basic",
+    "name": "Basic Laser",
+    "kind": "laser",
+    "damage": 10,
+    "cooldownMs": 300,
+    "price": 0
+  },
+  {
+    "id": "rocket_basic",
+    "name": "Basic Rocket",
+    "kind": "rocket",
+    "damage": 30,
+    "cooldownMs": 1200,
+    "price": 150
+  },
+  {
+    "id": "sword_basic",
+    "name": "Basic Sword",
+    "kind": "sword",
+    "damage": 20,
+    "cooldownMs": 600,
+    "price": 100
+  }
+]

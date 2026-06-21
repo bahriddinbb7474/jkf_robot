@@ -1,0 +1,9 @@
+[
+  {
+    "id": "mission_1",
+    "name": "Training Arena",
+    "enemyIds": ["bot_basic"],
+    "reward": 50,
+    "status": "stub"
+  }
+]

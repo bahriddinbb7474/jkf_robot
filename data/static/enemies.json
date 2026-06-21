@@ -1,0 +1,34 @@
+[
+  {
+    "id": "bot_basic",
+    "name": "Basic Bot",
+    "kind": "basic",
+    "health": 40,
+    "speed": 100,
+    "damage": 5
+  },
+  {
+    "id": "bot_fast",
+    "name": "Fast Bot",
+    "kind": "fast",
+    "health": 25,
+    "speed": 170,
+    "damage": 4
+  },
+  {
+    "id": "bot_shooter",
+    "name": "Shooter Bot",
+    "kind": "shooter",
+    "health": 35,
+    "speed": 80,
+    "damage": 8
+  },
+  {
+    "id": "boss_basic",
+    "name": "Arena Boss",
+    "kind": "boss",
+    "health": 250,
+    "speed": 70,
+    "damage": 15
+  }
+]

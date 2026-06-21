@@ -1,0 +1,30 @@
+[
+  {
+    "id": "math_1",
+    "subject": "math",
+    "prompt": "What is 7 + 8?",
+    "options": ["13", "14", "15", "16"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "math_2",
+    "subject": "math",
+    "prompt": "What is 6 x 4?",
+    "options": ["20", "22", "24", "26"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "english_1",
+    "subject": "english",
+    "prompt": "Choose the plural form of robot.",
+    "options": ["robotes", "robots", "robot's", "robot"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "english_2",
+    "subject": "english",
+    "prompt": "Choose the opposite of fast.",
+    "options": ["quick", "strong", "slow", "small"],
+    "correctOptionIndex": 2
+  }
+]
