@@ -2,27 +2,32 @@
   {
     "id": "laser_basic",
     "name": "Basic Laser",
-    "kind": "laser",
+    "type": "laser",
     "damage": 10,
     "cooldownMs": 300,
     "projectileSpeed": 600,
-    "maxRange": 900,
+    "range": 900,
     "price": 0
   },
   {
     "id": "rocket_basic",
     "name": "Basic Rocket",
-    "kind": "rocket",
+    "type": "rocket",
     "damage": 30,
     "cooldownMs": 1200,
+    "projectileSpeed": 420,
+    "range": 700,
+    "explosionRadius": 90,
     "price": 150
   },
   {
     "id": "sword_basic",
     "name": "Basic Sword",
-    "kind": "sword",
+    "type": "sword",
     "damage": 20,
     "cooldownMs": 600,
+    "range": 70,
+    "arcDegrees": 90,
     "price": 100
   }
 ]

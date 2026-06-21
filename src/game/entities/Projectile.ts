@@ -12,8 +12,9 @@ export class Projectile extends Phaser.GameObjects.Rectangle {
     x: number,
     y: number,
     direction: Phaser.Math.Vector2,
+    readonly damage: number,
     private readonly speed: number,
-    private readonly maxRange: number,
+    private readonly range: number,
   ) {
     super(scene, x, y, PROJECTILE_LENGTH, PROJECTILE_WIDTH, 0x76efff);
 
@@ -32,7 +33,7 @@ export class Projectile extends Phaser.GameObjects.Rectangle {
 
     if (
       !arenaBounds.contains(this.x, this.y) ||
-      this.distanceTravelled >= this.maxRange
+      this.distanceTravelled >= this.range
     ) {
       this.destroy();
     }

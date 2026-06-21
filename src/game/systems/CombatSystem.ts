@@ -14,7 +14,6 @@ export class CombatSystem {
   constructor(
     private readonly enemy: EnemyBot,
     private readonly player: PlayerRobot,
-    private readonly projectileDamage: number,
     private readonly contactDamage: ContactDamageConfig,
     private readonly onEnemyDestroyed: () => void,
     private readonly onPlayerHealthChanged: () => void,
@@ -40,7 +39,7 @@ export class CombatSystem {
       }
 
       projectile.destroy();
-      this.enemy.takeDamage(this.projectileDamage);
+      this.enemy.takeDamage(projectile.damage);
 
       if (this.enemy.health <= 0) {
         this.enemy.destroy(true);

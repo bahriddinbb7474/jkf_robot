@@ -13,11 +13,17 @@
 - [ ] Diagonal movement is not faster than cardinal movement.
 - [ ] Player robot remains inside all arena bounds.
 - [ ] Robot aim indicator follows the mouse.
+- [ ] HUD shows the active weapon label.
+- [ ] Key `1` selects laser.
+- [ ] Key `2` selects rocket.
+- [ ] Key `3` selects sword.
 - [ ] Left click fires a laser toward the pointer.
 - [ ] Laser cooldown prevents firing faster than once per 300 ms.
 - [ ] Laser projectiles are removed on hit, range limit, or leaving the arena.
+- [ ] Laser still damages the enemy when laser is selected.
+- [ ] Rocket selection does not crash the game and only shows a placeholder.
+- [ ] Sword selection does not crash the game and only shows a placeholder.
 - [ ] Exactly one enemy is visible with HP and moves directly toward the player.
-- [ ] Laser hits reduce dummy HP by 10.
 - [ ] Player HP is visible as `HP: current / 100`.
 - [ ] Enemy contact reduces player HP by 10 no faster than once per 800 ms.
 - [ ] Player and enemy are separated on contact; the player cannot pass through the enemy.

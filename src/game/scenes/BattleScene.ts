@@ -4,7 +4,7 @@ import { PlayerRobot } from '../entities/PlayerRobot';
 import { CombatSystem } from '../systems/CombatSystem';
 import { EnemyAISystem } from '../systems/EnemyAISystem';
 import { MovementSystem, type MovementKeys } from '../systems/MovementSystem';
-import { BASIC_LASER, WeaponSystem } from '../systems/WeaponSystem';
+import { WeaponSystem } from '../systems/WeaponSystem';
 
 const ARENA = new Phaser.Geom.Rectangle(40, 70, 880, 430);
 const GRID_SIZE = 40;
@@ -17,6 +17,7 @@ const BATTLE_CONFIG = {
 } as const;
 
 type BattleState = 'active' | 'victory' | 'defeat';
+type WeaponSlot = 'laser_basic' | 'rocket_basic' | 'sword_basic';
 
 export class BattleScene extends Phaser.Scene {
   private movementSystem?: MovementSystem;
@@ -26,7 +27,10 @@ export class BattleScene extends Phaser.Scene {
   private weaponSystem?: WeaponSystem;
   private combatSystem?: CombatSystem;
   private healthText?: Phaser.GameObjects.Text;
+  private weaponText?: Phaser.GameObjects.Text;
+  private placeholderText?: Phaser.GameObjects.Text;
   private restartKey?: Phaser.Input.Keyboard.Key;
+  private weaponSlotKeys?: Record<WeaponSlot, Phaser.Input.Keyboard.Key>;
   private battleState: BattleState = 'active';
 
   constructor() {
@@ -39,7 +43,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawArena();
 
     this.add
-      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 1-C', {
+      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 2-A', {
         color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -50,7 +54,7 @@ export class BattleScene extends Phaser.Scene {
     this.add.text(
       ARENA.x + 12,
       ARENA.y + 10,
-      'Move: W A S D  |  Aim: Mouse  |  Fire: Left click',
+      'Move: W A S D  |  Aim: Mouse  |  Fire: Left click  |  Weapons: 1 2 3',
       {
         color: '#8296a8',
         fontFamily: 'system-ui, sans-serif',
@@ -86,12 +90,11 @@ export class BattleScene extends Phaser.Scene {
       this,
       this.playerRobot,
       ARENA,
-      BASIC_LASER,
+      (message) => this.showWeaponPlaceholder(message),
     );
     this.combatSystem = new CombatSystem(
       this.enemy,
       this.playerRobot,
-      BASIC_LASER.damage,
       {
         damage: BATTLE_CONFIG.enemyContactDamage,
         cooldownMs: BATTLE_CONFIG.enemyContactCooldownMs,
@@ -109,11 +112,38 @@ export class BattleScene extends Phaser.Scene {
         fontStyle: 'bold',
       })
       .setOrigin(1, 0);
+    this.weaponText = this.add
+      .text(ARENA.x + 12, ARENA.bottom + 14, '', {
+        color: '#f4d35e',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '18px',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0, 0);
+    this.placeholderText = this.add
+      .text(ARENA.centerX, ARENA.bottom + 14, '', {
+        color: '#ffcf8b',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '16px',
+      })
+      .setOrigin(0.5, 0);
     this.updateHealthText();
+    this.updateWeaponText();
 
     this.restartKey = this.input.keyboard?.addKey(
       Phaser.Input.Keyboard.KeyCodes.R,
     );
+    this.weaponSlotKeys = {
+      laser_basic: this.input.keyboard!.addKey(
+        Phaser.Input.Keyboard.KeyCodes.ONE,
+      ),
+      rocket_basic: this.input.keyboard!.addKey(
+        Phaser.Input.Keyboard.KeyCodes.TWO,
+      ),
+      sword_basic: this.input.keyboard!.addKey(
+        Phaser.Input.Keyboard.KeyCodes.THREE,
+      ),
+    };
   }
 
   update(time: number, delta: number): void {
@@ -126,6 +156,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.movementSystem?.update(delta);
+    this.updateWeaponSelection();
 
     const pointer = this.input.activePointer;
     this.playerRobot?.aimAt(pointer.worldX, pointer.worldY);
@@ -200,6 +231,55 @@ export class BattleScene extends Phaser.Scene {
         padding: { x: 18, y: 12 },
       })
       .setOrigin(0.5);
+  }
+
+  private updateWeaponSelection(): void {
+    if (!this.weaponSystem || !this.weaponSlotKeys) {
+      return;
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.weaponSlotKeys.laser_basic)) {
+      this.weaponSystem.selectWeapon('laser_basic');
+      this.updateWeaponText();
+    } else if (
+      Phaser.Input.Keyboard.JustDown(this.weaponSlotKeys.rocket_basic)
+    ) {
+      this.weaponSystem.selectWeapon('rocket_basic');
+      this.updateWeaponText();
+    } else if (
+      Phaser.Input.Keyboard.JustDown(this.weaponSlotKeys.sword_basic)
+    ) {
+      this.weaponSystem.selectWeapon('sword_basic');
+      this.updateWeaponText();
+    }
+  }
+
+  private updateWeaponText(): void {
+    const weapon = this.weaponSystem?.getActiveWeapon();
+
+    if (!weapon || !this.weaponText) {
+      return;
+    }
+
+    const label = weapon.name.replace(/^Basic\s+/, '');
+    this.weaponText.setText(`Weapon: ${label}`);
+  }
+
+  private showWeaponPlaceholder(message: string): void {
+    if (!this.placeholderText) {
+      return;
+    }
+
+    this.placeholderText.setText(message);
+
+    this.time.delayedCall(1200, () => {
+      if (
+        this.placeholderText?.active &&
+        this.placeholderText.text === message
+      ) {
+        this.placeholderText.setText('');
+      }
+    });
   }
 
   private createMovementKeys(): MovementKeys {

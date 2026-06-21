@@ -1,12 +1,14 @@
-export type WeaponKind = 'laser' | 'rocket' | 'sword';
+export type WeaponType = 'laser' | 'rocket' | 'sword';
 
 export interface Weapon {
   id: string;
   name: string;
-  kind: WeaponKind;
+  type: WeaponType;
   damage: number;
   cooldownMs: number;
   projectileSpeed?: number;
-  maxRange?: number;
+  range?: number;
+  explosionRadius?: number;
+  arcDegrees?: number;
   price: number;
 }
