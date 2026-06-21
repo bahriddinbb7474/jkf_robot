@@ -26,6 +26,11 @@ const BATTLE_PROTOTYPE_WAVES = [
   { enemyIds: ['bot_basic', 'bot_fast', 'bot_fast'] },
   { enemyIds: ['bot_basic', 'bot_fast', 'bot_shooter'] },
 ] as const;
+const BOSS_ID = 'boss_basic';
+const BOSS_SPAWN_POSITION = {
+  x: ARENA.right - 140,
+  y: ARENA.centerY,
+} as const;
 
 type BattleState = 'active' | 'waveTransition' | 'victory' | 'defeat';
 type BattleResult = Extract<BattleState, 'victory' | 'defeat'>;
@@ -42,10 +47,13 @@ export class BattleScene extends Phaser.Scene {
   private weaponText?: Phaser.GameObjects.Text;
   private waveText?: Phaser.GameObjects.Text;
   private enemyCountText?: Phaser.GameObjects.Text;
+  private bossHealthText?: Phaser.GameObjects.Text;
   private waveTransitionText?: Phaser.GameObjects.Text;
   private restartKey?: Phaser.Input.Keyboard.Key;
   private weaponSlotKeys?: Record<WeaponSlot, Phaser.Input.Keyboard.Key>;
   private currentWaveIndex = 0;
+  private boss?: EnemyBot;
+  private bossPhase = false;
   private battleState: BattleState = 'active';
 
   constructor() {
@@ -55,17 +63,20 @@ export class BattleScene extends Phaser.Scene {
   create(): void {
     this.battleState = 'active';
     this.currentWaveIndex = 0;
+    this.boss = undefined;
+    this.bossPhase = false;
     this.enemies = [];
     this.healthText = undefined;
     this.weaponText = undefined;
     this.waveText = undefined;
     this.enemyCountText = undefined;
+    this.bossHealthText = undefined;
     this.waveTransitionText = undefined;
     this.cameras.main.setBackgroundColor('#101820');
     this.drawArena();
 
     this.add
-      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 3-B', {
+      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 3-C', {
         color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -113,7 +124,7 @@ export class BattleScene extends Phaser.Scene {
     this.combatSystem = new CombatSystem(
       this.enemies,
       this.playerRobot,
-      () => this.handleEnemyDestroyed(),
+      (enemy) => this.handleEnemyDestroyed(enemy),
       () => this.updateHealthText(),
       () => this.endBattle('defeat'),
     );
@@ -150,10 +161,22 @@ export class BattleScene extends Phaser.Scene {
         fontStyle: 'bold',
       })
       .setOrigin(1, 0);
+    this.bossHealthText = this.add
+      .text(this.scale.width / 2, ARENA.top + 38, '', {
+        backgroundColor: '#351625',
+        color: '#ffd0df',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '18px',
+        fontStyle: 'bold',
+        padding: { x: 12, y: 6 },
+      })
+      .setOrigin(0.5)
+      .setVisible(false);
     this.updateHealthText();
     this.updateWeaponText();
     this.updateWaveText();
     this.updateEnemyCountText();
+    this.updateBossHealthText();
 
     this.restartKey = this.input.keyboard?.addKey(
       Phaser.Input.Keyboard.KeyCodes.R,
@@ -204,6 +227,7 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
+    this.updateBossHealthText();
     this.separatePlayerFromEnemies();
   }
 
@@ -257,7 +281,7 @@ export class BattleScene extends Phaser.Scene {
 
     const message =
       result === 'victory'
-        ? 'Victory - all waves cleared - press R to restart'
+        ? 'Victory - boss defeated - press R to restart'
         : 'Defeat - press R to restart';
     const color = result === 'victory' ? '#8effb6' : '#ff9ca5';
     const backgroundColor = result === 'victory' ? '#102b20' : '#35161b';
@@ -312,17 +336,34 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private updateWaveText(): void {
-    this.waveText?.setText(
-      `Wave: ${this.currentWaveIndex + 1} / ${BATTLE_PROTOTYPE_WAVES.length}`,
-    );
+    const label = this.bossPhase
+      ? 'Wave: Boss'
+      : `Wave: ${this.currentWaveIndex + 1} / ${BATTLE_PROTOTYPE_WAVES.length}`;
+    this.waveText?.setText(label);
   }
 
-  private handleEnemyDestroyed(): void {
+  private updateBossHealthText(): void {
+    if (!this.boss?.active) {
+      this.bossHealthText?.setVisible(false);
+      return;
+    }
+
+    this.bossHealthText
+      ?.setText(`Boss HP: ${this.boss.health} / ${this.boss.maxHealth}`)
+      .setVisible(true);
+  }
+
+  private handleEnemyDestroyed(enemy: EnemyBot): void {
     this.updateEnemyCountText();
+    if (enemy === this.boss) {
+      this.updateBossHealthText();
+    }
 
     if (this.enemies.every((enemy) => !enemy.active)) {
-      if (this.currentWaveIndex === BATTLE_PROTOTYPE_WAVES.length - 1) {
+      if (this.bossPhase) {
         this.endBattle('victory');
+      } else if (this.currentWaveIndex === BATTLE_PROTOTYPE_WAVES.length - 1) {
+        this.startBossTransition();
       } else {
         this.startWaveTransition();
       }
@@ -330,6 +371,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private startWaveTransition(): void {
+    this.startCombatTransition('Wave cleared', () => {
+      this.spawnWave(this.currentWaveIndex + 1);
+    });
+  }
+
+  private startBossTransition(): void {
+    this.startCombatTransition('Boss incoming', () => this.spawnBoss());
+  }
+
+  private startCombatTransition(message: string, onComplete: () => void): void {
     if (this.battleState !== 'active') {
       return;
     }
@@ -337,7 +388,7 @@ export class BattleScene extends Phaser.Scene {
     this.battleState = 'waveTransition';
     this.clearCombatProjectiles();
     this.waveTransitionText = this.add
-      .text(this.scale.width / 2, ARENA.centerY, 'Wave cleared', {
+      .text(this.scale.width / 2, ARENA.centerY, message, {
         backgroundColor: '#172d42',
         color: '#b8d8ff',
         fontFamily: 'system-ui, sans-serif',
@@ -354,7 +405,7 @@ export class BattleScene extends Phaser.Scene {
 
       this.waveTransitionText?.destroy();
       this.waveTransitionText = undefined;
-      this.spawnWave(this.currentWaveIndex + 1);
+      onComplete();
       this.battleState = 'active';
     });
   }
@@ -434,9 +485,32 @@ export class BattleScene extends Phaser.Scene {
     });
 
     this.currentWaveIndex = waveIndex;
+    this.boss = undefined;
+    this.bossPhase = false;
     this.enemies.splice(0, this.enemies.length, ...spawnedEnemies);
     this.updateWaveText();
     this.updateEnemyCountText();
+    this.updateBossHealthText();
+  }
+
+  private spawnBoss(): void {
+    const config = ENEMY_CONFIGS.find((enemy) => enemy.id === BOSS_ID);
+
+    if (!config || config.kind !== 'boss') {
+      throw new Error(`Missing boss config: ${BOSS_ID}`);
+    }
+
+    this.boss = new EnemyBot(
+      this,
+      BOSS_SPAWN_POSITION.x,
+      BOSS_SPAWN_POSITION.y,
+      config,
+    );
+    this.bossPhase = true;
+    this.enemies.splice(0, this.enemies.length, this.boss);
+    this.updateWaveText();
+    this.updateEnemyCountText();
+    this.updateBossHealthText();
   }
 
   private createMovementKeys(): MovementKeys {
@@ -444,7 +518,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (!keyboard) {
       throw new Error(
-        'Keyboard input is required for the Stage 3-B prototype.',
+        'Keyboard input is required for the Stage 3-C prototype.',
       );
     }
 

@@ -57,11 +57,20 @@
 - [ ] Sword damages every nearby enemy inside its front arc once per swing.
 - [ ] A defeated enemy disappears and the enemies-left HUD decrements.
 - [ ] Wave and enemies-left HUD values update for every spawn and defeat.
-- [ ] Victory appears only after every enemy in Wave 3 is defeated.
-- [ ] Final text reads `Victory - all waves cleared - press R to restart`.
+- [ ] Clearing Wave 3 does not show Victory and starts the boss transition.
+- [ ] Boss spawns after Wave 3 as one large, visually distinct primitive enemy.
+- [ ] Boss phase HUD shows `Wave: Boss`, `Enemies: 1`, and `Boss HP: current / 180`.
+- [ ] Boss uses 180 HP, 42 radius, 35 px/s movement, and roughly 280 px preferred distance.
+- [ ] Boss fires every 1400 ms; projectiles use 12 damage and 230 px/s speed.
+- [ ] Boss contact damage is 15 with a 1000 ms cooldown.
+- [ ] Laser direct damage reduces boss HP.
+- [ ] Rocket explosion damage reduces boss HP when the boss is in radius.
+- [ ] Sword damages the boss only when it is nearby and inside the front arc.
+- [ ] Victory appears only after the boss is defeated.
+- [ ] Final text reads `Victory - boss defeated - press R to restart`.
 - [ ] Player reaching 0 HP shows the Defeat state.
 - [ ] Movement, aiming, firing, AI, and damage stop after Victory or Defeat.
 - [ ] No projectile, explosion, or melee damage continues after Victory or Defeat.
-- [ ] R restarts `BattleScene` at Wave 1 with full player/enemy HP and laser selected.
+- [ ] R restarts `BattleScene` at Wave 1 with full player/enemy HP, no boss, and laser selected.
 - [ ] Static JSON files parse successfully.
 - [ ] Git working tree is clean after commit.

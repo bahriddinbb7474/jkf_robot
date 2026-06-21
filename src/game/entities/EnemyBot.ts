@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Enemy, EnemyKind } from '../types/Enemy';
 
-const ENEMY_SIZE = 52;
+const DEFAULT_ENEMY_RADIUS = 26;
 const ENEMY_COLORS: Record<EnemyKind, { fill: number; stroke: number }> = {
   basic: { fill: 0xd95763, stroke: 0xffb4ba },
   fast: { fill: 0xf08a4b, stroke: 0xffd0a8 },
@@ -22,21 +22,29 @@ export class EnemyBot extends Phaser.GameObjects.Container {
     super(scene, x, y);
     this.currentHealth = config.health;
     const colors = ENEMY_COLORS[config.kind];
+    const radius = this.collisionRadius;
 
-    const body = scene.add.circle(0, 0, ENEMY_SIZE / 2, colors.fill);
-    body.setStrokeStyle(3, colors.stroke);
+    const body = scene.add.circle(0, 0, radius, colors.fill);
+    body.setStrokeStyle(config.kind === 'boss' ? 5 : 3, colors.stroke);
+    const bodyParts: Phaser.GameObjects.GameObject[] = [body];
+
+    if (config.kind === 'boss') {
+      const core = scene.add.circle(0, 0, radius * 0.38, 0xffc857);
+      core.setStrokeStyle(3, 0xffeda3);
+      bodyParts.push(core);
+    }
 
     this.healthText = scene.add
-      .text(0, -ENEMY_SIZE / 2 - 18, '', {
+      .text(0, -radius - 18, '', {
         color: '#ffffff',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '15px',
+        fontSize: config.kind === 'boss' ? '17px' : '15px',
         fontStyle: 'bold',
       })
       .setOrigin(0.5);
 
-    this.add([body, this.healthText]);
-    this.setSize(ENEMY_SIZE, ENEMY_SIZE);
+    this.add([...bodyParts, this.healthText]);
+    this.setSize(radius * 2, radius * 2);
     this.updateHealthText();
     scene.add.existing(this);
   }
@@ -50,7 +58,9 @@ export class EnemyBot extends Phaser.GameObjects.Container {
   }
 
   get collisionRadius(): number {
-    return ENEMY_SIZE / 2;
+    return this.config.kind === 'boss'
+      ? this.config.radius
+      : DEFAULT_ENEMY_RADIUS;
   }
 
   takeDamage(amount: number): void {
@@ -63,11 +73,13 @@ export class EnemyBot extends Phaser.GameObjects.Container {
   }
 
   getHitBounds(): Phaser.Geom.Rectangle {
+    const diameter = this.collisionRadius * 2;
+
     return new Phaser.Geom.Rectangle(
-      this.x - ENEMY_SIZE / 2,
-      this.y - ENEMY_SIZE / 2,
-      ENEMY_SIZE,
-      ENEMY_SIZE,
+      this.x - this.collisionRadius,
+      this.y - this.collisionRadius,
+      diameter,
+      diameter,
     );
   }
 

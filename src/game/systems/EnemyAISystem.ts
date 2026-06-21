@@ -2,10 +2,9 @@ import Phaser from 'phaser';
 import { EnemyBot } from '../entities/EnemyBot';
 import { EnemyProjectile } from '../entities/EnemyProjectile';
 import { PlayerRobot } from '../entities/PlayerRobot';
-import type { ShooterEnemy } from '../types/Enemy';
+import type { RangedEnemy } from '../types/Enemy';
 
 const SHOOTER_DISTANCE_TOLERANCE = 30;
-const PROJECTILE_SPAWN_OFFSET = 36;
 
 export class EnemyAISystem {
   private readonly direction = new Phaser.Math.Vector2();
@@ -33,8 +32,11 @@ export class EnemyAISystem {
         continue;
       }
 
-      if (enemy.config.behavior === 'shooter') {
-        this.updateShooter(enemy, enemy.config, time, deltaMs);
+      if (
+        enemy.config.behavior === 'shooter' ||
+        enemy.config.behavior === 'boss'
+      ) {
+        this.updateRangedEnemy(enemy, enemy.config, time, deltaMs);
       } else {
         this.updateChaser(enemy, deltaMs);
       }
@@ -66,9 +68,9 @@ export class EnemyAISystem {
     );
   }
 
-  private updateShooter(
+  private updateRangedEnemy(
     enemy: EnemyBot,
-    config: ShooterEnemy,
+    config: RangedEnemy,
     time: number,
     deltaMs: number,
   ): void {
@@ -99,8 +101,8 @@ export class EnemyAISystem {
     const direction = new Phaser.Math.Vector2(toPlayerX, toPlayerY).normalize();
     const projectile = new EnemyProjectile(
       this.scene,
-      enemy.x + direction.x * PROJECTILE_SPAWN_OFFSET,
-      enemy.y + direction.y * PROJECTILE_SPAWN_OFFSET,
+      enemy.x + direction.x * (enemy.collisionRadius + 10),
+      enemy.y + direction.y * (enemy.collisionRadius + 10),
       direction,
       {
         damage: config.projectileDamage,

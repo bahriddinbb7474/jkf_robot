@@ -1,5 +1,5 @@
 export type EnemyKind = 'basic' | 'fast' | 'shooter' | 'boss';
-export type EnemyBehavior = 'chase' | 'shooter';
+export type EnemyBehavior = 'chase' | 'shooter' | 'boss';
 
 interface EnemyBase {
   id: string;
@@ -13,7 +13,7 @@ interface EnemyBase {
 }
 
 export interface ChaseEnemy extends EnemyBase {
-  kind: 'basic' | 'fast' | 'boss';
+  kind: 'basic' | 'fast';
   behavior: 'chase';
 }
 
@@ -27,4 +27,16 @@ export interface ShooterEnemy extends EnemyBase {
   projectileRange: number;
 }
 
-export type Enemy = ChaseEnemy | ShooterEnemy;
+export interface BossEnemy extends EnemyBase {
+  kind: 'boss';
+  behavior: 'boss';
+  preferredDistance: number;
+  shootCooldownMs: number;
+  projectileDamage: number;
+  projectileSpeed: number;
+  projectileRange: number;
+  radius: number;
+}
+
+export type RangedEnemy = ShooterEnemy | BossEnemy;
+export type Enemy = ChaseEnemy | RangedEnemy;

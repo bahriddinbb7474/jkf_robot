@@ -61,3 +61,11 @@
 - A 750 ms non-combat transition separates waves and clears both player and enemy projectiles.
 - Player HP and selected weapon persist between waves; R restarts the scene at Wave 1 with fresh state.
 - Victory is emitted only after the final wave has no active enemies. Boss flow remains reserved for Stage 3-C.
+
+## Stage 3-C
+
+- `boss_basic` uses the same `EnemyBot`, AI, projectile, collision, and combat paths as other enemies, with a config-driven 42 px radius and distinct primitive core/outline.
+- Boss behavior is a single preferred-distance ranged pattern with no phases: 35 px/s movement, 1400 ms shots, and 15 contact damage per 1000 ms.
+- Clearing Wave 3 enters the existing 750 ms transition, clears projectiles, and then replaces the shared enemy array with one boss.
+- Boss HUD is text-only and visible only while the boss is active; the normal wave/enemy HUD changes to `Wave: Boss` and `Enemies: 1`.
+- Victory is reserved for boss death. R restarts the entire prototype at Wave 1 and clears boss state/projectiles.

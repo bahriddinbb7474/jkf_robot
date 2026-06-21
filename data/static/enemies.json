@@ -36,12 +36,18 @@
   },
   {
     "id": "boss_basic",
-    "name": "Arena Boss",
+    "name": "Basic Boss",
     "kind": "boss",
-    "behavior": "chase",
-    "health": 250,
-    "speed": 70,
+    "behavior": "boss",
+    "health": 180,
+    "speed": 35,
     "contactDamage": 15,
-    "contactDamageCooldownMs": 800
+    "contactDamageCooldownMs": 1000,
+    "preferredDistance": 280,
+    "shootCooldownMs": 1400,
+    "projectileDamage": 12,
+    "projectileSpeed": 230,
+    "projectileRange": 650,
+    "radius": 42
   }
 ]
