@@ -35,12 +35,19 @@
 - [ ] Sword attack visual appears briefly in front of the player.
 - [ ] Sword uses config values: 15 damage, 450 ms cooldown, 80 px range, and 90 degree arc.
 - [ ] One sword swing cannot damage the same enemy multiple times.
-- [ ] Exactly three enemies spawn with distinct labels/colors and individual HP.
+- [ ] HUD starts at `Wave: 1 / 3` and `Enemies: 2`.
+- [ ] Wave 1 spawns two basic bots at distinct positions.
+- [ ] Clearing Wave 1 starts Wave 2 after a short transition without showing Victory.
+- [ ] Wave 2 spawns one basic bot and two fast bots.
+- [ ] Clearing Wave 2 starts Wave 3 after a short transition without showing Victory.
+- [ ] Wave 3 spawns one basic, one fast, and one shooter bot.
+- [ ] Each wave's enemies have distinct labels/colors, positions, and individual HP.
 - [ ] Basic bot uses 40 HP, 70 px/s chase, and 10 contact damage.
 - [ ] Fast bot uses 25 HP, 115 px/s chase, and 8 contact damage.
 - [ ] Shooter bot uses 35 HP, maintains roughly 260 px distance, and fires every 1200 ms.
 - [ ] Shooter projectiles use 8 damage, 250 px/s speed, and disappear on player hit, range, or arena bounds.
 - [ ] Enemy projectile hits reduce player HP once per projectile.
+- [ ] Enemy projectiles and active player projectiles are cleared between waves.
 - [ ] Player HP is visible as `HP: current / 100`.
 - [ ] Each enemy's contact damage uses its config and an 800 ms per-enemy cooldown.
 - [ ] Player and active enemies are separated on contact; the player cannot pass through them.
@@ -49,10 +56,12 @@
 - [ ] Rocket explosions can damage every enemy inside the blast radius.
 - [ ] Sword damages every nearby enemy inside its front arc once per swing.
 - [ ] A defeated enemy disappears and the enemies-left HUD decrements.
-- [ ] Victory appears only after all three enemies are defeated.
+- [ ] Wave and enemies-left HUD values update for every spawn and defeat.
+- [ ] Victory appears only after every enemy in Wave 3 is defeated.
+- [ ] Final text reads `Victory - all waves cleared - press R to restart`.
 - [ ] Player reaching 0 HP shows the Defeat state.
 - [ ] Movement, aiming, firing, AI, and damage stop after Victory or Defeat.
 - [ ] No projectile, explosion, or melee damage continues after Victory or Defeat.
-- [ ] R restarts `BattleScene` with full player/enemy HP, three enemies, and laser selected.
+- [ ] R restarts `BattleScene` at Wave 1 with full player/enemy HP and laser selected.
 - [ ] Static JSON files parse successfully.
 - [ ] Git working tree is clean after commit.

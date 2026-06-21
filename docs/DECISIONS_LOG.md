@@ -52,3 +52,12 @@
 - `CombatSystem` owns damage across the enemy collection: direct hits select one target, while rocket explosions and sword arcs can affect multiple targets.
 - Contact cooldowns are tracked per enemy, and victory occurs only when every spawned enemy is inactive.
 - The existing boss config remains a future data stub and is not spawned or implemented in Stage 3-A.
+
+## Stage 3-B
+
+- Three typed wave definitions remain local to `BattleScene`; no mission or reward system is introduced.
+- Wave composition is 2 basic, then 1 basic + 2 fast, then 1 basic + 1 fast + 1 shooter.
+- AI and combat retain one shared mutable enemy array, replaced in place when a wave spawns so systems do not need reconstruction.
+- A 750 ms non-combat transition separates waves and clears both player and enemy projectiles.
+- Player HP and selected weapon persist between waves; R restarts the scene at Wave 1 with fresh state.
+- Victory is emitted only after the final wave has no active enemies. Boss flow remains reserved for Stage 3-C.
