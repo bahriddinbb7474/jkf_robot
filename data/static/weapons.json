@@ -5,6 +5,8 @@
     "kind": "laser",
     "damage": 10,
     "cooldownMs": 300,
+    "projectileSpeed": 600,
+    "maxRange": 900,
     "price": 0
   },
   {

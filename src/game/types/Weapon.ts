@@ -6,5 +6,7 @@ export interface Weapon {
   kind: WeaponKind;
   damage: number;
   cooldownMs: number;
+  projectileSpeed?: number;
+  maxRange?: number;
   price: number;
 }

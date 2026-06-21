@@ -19,3 +19,11 @@
 - `MovementSystem` owns normalized frame-rate-independent movement and arena clamping.
 - Player speed is a single exported constant: `220` pixels per second.
 - No Phaser physics engine is needed for this movement-only substage.
+
+## Stage 1-B
+
+- Mouse aim rotates a child indicator; the player body and movement bounds remain stable.
+- Laser projectiles use explicit velocity, range, and arena cleanup without enabling a physics engine.
+- `WeaponSystem` owns fire cooldown and projectile lifetime; `CombatSystem` owns hit damage and dummy death.
+- The prototype uses `laser_basic` values: 10 damage, 300 ms cooldown, 600 px/s projectile speed, and 900 px range.
+- The only enemy is a stationary 40 HP dummy; no enemy AI or player damage is introduced.

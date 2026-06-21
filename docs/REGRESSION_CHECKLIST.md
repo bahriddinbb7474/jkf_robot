@@ -12,5 +12,12 @@
 - [ ] W/A/S/D move in the expected directions.
 - [ ] Diagonal movement is not faster than cardinal movement.
 - [ ] Player robot remains inside all arena bounds.
+- [ ] Robot aim indicator follows the mouse.
+- [ ] Left click fires a laser toward the pointer.
+- [ ] Laser cooldown prevents firing faster than once per 300 ms.
+- [ ] Laser projectiles are removed on hit, range limit, or leaving the arena.
+- [ ] Exactly one stationary dummy enemy is visible with HP.
+- [ ] Laser hits reduce dummy HP by 10.
+- [ ] Dummy disappears at 0 HP and the Stage 1-B completion text appears.
 - [ ] Static JSON files parse successfully.
 - [ ] Git working tree is clean after commit.
