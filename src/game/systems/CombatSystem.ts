@@ -1,45 +1,98 @@
 import Phaser from 'phaser';
 import { EnemyBot } from '../entities/EnemyBot';
+import { EnemyProjectile } from '../entities/EnemyProjectile';
 import { PlayerRobot } from '../entities/PlayerRobot';
 import { Projectile, type ExplosionEvent } from '../entities/Projectile';
-
-export interface ContactDamageConfig {
-  damage: number;
-  cooldownMs: number;
-}
+import type { MeleeAttackEvent } from './WeaponSystem';
 
 export class CombatSystem {
-  private nextContactDamageAt = 0;
+  private readonly nextContactDamageAt = new Map<EnemyBot, number>();
 
   constructor(
-    private readonly enemy: EnemyBot,
+    private readonly enemies: readonly EnemyBot[],
     private readonly player: PlayerRobot,
-    private readonly contactDamage: ContactDamageConfig,
-    private readonly onEnemyDestroyed: () => void,
+    private readonly onEnemyDestroyed: (enemy: EnemyBot) => void,
     private readonly onPlayerHealthChanged: () => void,
     private readonly onPlayerDestroyed: () => void,
   ) {}
 
   update(
     time: number,
-    projectiles: readonly Projectile[],
+    playerProjectiles: readonly Projectile[],
+    enemyProjectiles: readonly EnemyProjectile[],
     explodeProjectile?: (projectile: Projectile) => ExplosionEvent | null,
   ): void {
-    if (!this.enemy.active) {
+    this.applyPlayerProjectiles(playerProjectiles, explodeProjectile);
+
+    if (this.applyEnemyProjectiles(enemyProjectiles)) {
       return;
     }
 
-    const enemyBounds = this.enemy.getHitBounds();
-    const pendingExplosions: ExplosionEvent[] = [];
+    this.applyContactDamage(time);
+  }
 
+  applyExplosion(explosion: ExplosionEvent): void {
+    for (const enemy of this.getActiveEnemies()) {
+      const distance = Phaser.Math.Distance.Between(
+        explosion.x,
+        explosion.y,
+        enemy.x,
+        enemy.y,
+      );
+
+      if (distance <= explosion.radius + enemy.collisionRadius) {
+        this.damageEnemy(enemy, explosion.damage);
+      }
+    }
+  }
+
+  applyMeleeAttack(attack: MeleeAttackEvent): void {
+    const attackDirection = new Phaser.Math.Vector2(
+      Math.cos(attack.angle),
+      Math.sin(attack.angle),
+    );
+    const maxDelta = Phaser.Math.DegToRad(attack.arcDegrees / 2);
+
+    for (const enemy of this.getActiveEnemies()) {
+      const toEnemy = new Phaser.Math.Vector2(
+        enemy.x - attack.x,
+        enemy.y - attack.y,
+      );
+      const distance = toEnemy.length();
+
+      if (distance > attack.range + enemy.collisionRadius) {
+        continue;
+      }
+
+      const enemyDirection =
+        distance > 0 ? toEnemy.normalize() : attackDirection.clone();
+      const angleDelta = Phaser.Math.Angle.Wrap(
+        enemyDirection.angle() - attackDirection.angle(),
+      );
+
+      if (Math.abs(angleDelta) <= maxDelta) {
+        this.damageEnemy(enemy, attack.damage);
+      }
+    }
+  }
+
+  private applyPlayerProjectiles(
+    projectiles: readonly Projectile[],
+    explodeProjectile?: (projectile: Projectile) => ExplosionEvent | null,
+  ): void {
     for (const projectile of projectiles) {
-      if (
-        !projectile.active ||
-        !Phaser.Geom.Intersects.RectangleToRectangle(
+      if (!projectile.active) {
+        continue;
+      }
+
+      const hitEnemy = this.getActiveEnemies().find((enemy) =>
+        Phaser.Geom.Intersects.RectangleToRectangle(
           projectile.getBounds(),
-          enemyBounds,
-        )
-      ) {
+          enemy.getHitBounds(),
+        ),
+      );
+
+      if (!hitEnemy) {
         continue;
       }
 
@@ -48,61 +101,90 @@ export class CombatSystem {
           explodeProjectile?.(projectile) ?? projectile.explode();
 
         if (explosion) {
-          pendingExplosions.push(explosion);
+          this.applyExplosion(explosion);
         }
       } else {
         projectile.destroy();
-        this.enemy.takeDamage(projectile.damage);
-
-        if (this.enemy.health <= 0) {
-          this.enemy.destroy(true);
-          this.onEnemyDestroyed();
-          return;
-        }
+        this.damageEnemy(hitEnemy, projectile.damage);
       }
     }
+  }
 
-    for (const explosion of pendingExplosions) {
-      if (!this.enemy.active) {
-        return;
-      }
-
-      const distance = Phaser.Math.Distance.Between(
-        explosion.x,
-        explosion.y,
-        this.enemy.x,
-        this.enemy.y,
-      );
-
-      if (distance > explosion.radius + this.enemy.collisionRadius) {
+  private applyEnemyProjectiles(
+    projectiles: readonly EnemyProjectile[],
+  ): boolean {
+    for (const projectile of projectiles) {
+      if (
+        !projectile.active ||
+        !Phaser.Geom.Intersects.RectangleToRectangle(
+          projectile.getBounds(),
+          this.player.getHitBounds(),
+        )
+      ) {
         continue;
       }
 
-      this.enemy.takeDamage(explosion.damage);
+      projectile.destroy();
 
-      if (this.enemy.health <= 0) {
-        this.enemy.destroy(true);
-        this.onEnemyDestroyed();
-        return;
+      if (this.damagePlayer(projectile.damage)) {
+        return true;
       }
     }
 
-    if (
-      time < this.nextContactDamageAt ||
-      !Phaser.Geom.Intersects.RectangleToRectangle(
-        this.enemy.getHitBounds(),
-        this.player.getHitBounds(),
-      )
-    ) {
+    return false;
+  }
+
+  private applyContactDamage(time: number): void {
+    for (const enemy of this.getActiveEnemies()) {
+      const nextDamageAt = this.nextContactDamageAt.get(enemy) ?? 0;
+
+      if (
+        time < nextDamageAt ||
+        !Phaser.Geom.Intersects.RectangleToRectangle(
+          enemy.getHitBounds(),
+          this.player.getHitBounds(),
+        )
+      ) {
+        continue;
+      }
+
+      this.nextContactDamageAt.set(
+        enemy,
+        time + enemy.config.contactDamageCooldownMs,
+      );
+
+      if (this.damagePlayer(enemy.config.contactDamage)) {
+        return;
+      }
+    }
+  }
+
+  private damageEnemy(enemy: EnemyBot, damage: number): void {
+    if (!enemy.active) {
       return;
     }
 
-    this.player.takeDamage(this.contactDamage.damage);
-    this.nextContactDamageAt = time + this.contactDamage.cooldownMs;
+    enemy.takeDamage(damage);
+
+    if (enemy.health <= 0) {
+      enemy.destroy(true);
+      this.onEnemyDestroyed(enemy);
+    }
+  }
+
+  private damagePlayer(damage: number): boolean {
+    this.player.takeDamage(damage);
     this.onPlayerHealthChanged();
 
     if (this.player.health <= 0) {
       this.onPlayerDestroyed();
+      return true;
     }
+
+    return false;
+  }
+
+  private getActiveEnemies(): EnemyBot[] {
+    return this.enemies.filter((enemy) => enemy.active);
   }
 }

@@ -35,15 +35,24 @@
 - [ ] Sword attack visual appears briefly in front of the player.
 - [ ] Sword uses config values: 15 damage, 450 ms cooldown, 80 px range, and 90 degree arc.
 - [ ] One sword swing cannot damage the same enemy multiple times.
-- [ ] Exactly one enemy is visible with HP and moves directly toward the player.
+- [ ] Exactly three enemies spawn with distinct labels/colors and individual HP.
+- [ ] Basic bot uses 40 HP, 70 px/s chase, and 10 contact damage.
+- [ ] Fast bot uses 25 HP, 115 px/s chase, and 8 contact damage.
+- [ ] Shooter bot uses 35 HP, maintains roughly 260 px distance, and fires every 1200 ms.
+- [ ] Shooter projectiles use 8 damage, 250 px/s speed, and disappear on player hit, range, or arena bounds.
+- [ ] Enemy projectile hits reduce player HP once per projectile.
 - [ ] Player HP is visible as `HP: current / 100`.
-- [ ] Enemy contact reduces player HP by 10 no faster than once per 800 ms.
-- [ ] Player and enemy are separated on contact; the player cannot pass through the enemy.
+- [ ] Each enemy's contact damage uses its config and an 800 ms per-enemy cooldown.
+- [ ] Player and active enemies are separated on contact; the player cannot pass through them.
 - [ ] Collision separation keeps the player inside the arena.
-- [ ] Enemy disappears at 0 HP and the Victory state appears.
+- [ ] Laser direct damage targets the specific enemy hit.
+- [ ] Rocket explosions can damage every enemy inside the blast radius.
+- [ ] Sword damages every nearby enemy inside its front arc once per swing.
+- [ ] A defeated enemy disappears and the enemies-left HUD decrements.
+- [ ] Victory appears only after all three enemies are defeated.
 - [ ] Player reaching 0 HP shows the Defeat state.
 - [ ] Movement, aiming, firing, AI, and damage stop after Victory or Defeat.
 - [ ] No projectile, explosion, or melee damage continues after Victory or Defeat.
-- [ ] R restarts `BattleScene` with full player/enemy HP and laser selected.
+- [ ] R restarts `BattleScene` with full player/enemy HP, three enemies, and laser selected.
 - [ ] Static JSON files parse successfully.
 - [ ] Git working tree is clean after commit.

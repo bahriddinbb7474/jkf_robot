@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import enemiesData from '../../../data/static/enemies.json';
 import { EnemyBot } from '../entities/EnemyBot';
 import { PlayerRobot } from '../entities/PlayerRobot';
 import type { ExplosionEvent } from '../entities/Projectile';
@@ -6,16 +7,19 @@ import { CombatSystem } from '../systems/CombatSystem';
 import { EnemyAISystem } from '../systems/EnemyAISystem';
 import { MovementSystem, type MovementKeys } from '../systems/MovementSystem';
 import { WeaponSystem, type MeleeAttackEvent } from '../systems/WeaponSystem';
+import type { Enemy } from '../types/Enemy';
 
 const ARENA = new Phaser.Geom.Rectangle(40, 70, 880, 430);
 const GRID_SIZE = 40;
 const BATTLE_CONFIG = {
   playerMaxHealth: 100,
-  enemyHealth: 40,
-  enemySpeed: 70,
-  enemyContactDamage: 10,
-  enemyContactCooldownMs: 800,
 } as const;
+const ENEMY_CONFIGS = enemiesData as Enemy[];
+const ENEMY_SPAWNS = [
+  { id: 'bot_basic', x: ARENA.right - 120, y: ARENA.top + 100 },
+  { id: 'bot_fast', x: ARENA.right - 130, y: ARENA.bottom - 90 },
+  { id: 'bot_shooter', x: ARENA.left + 120, y: ARENA.top + 100 },
+] as const;
 
 type BattleState = 'active' | 'victory' | 'defeat';
 type WeaponSlot = 'laser_basic' | 'rocket_basic' | 'sword_basic';
@@ -24,11 +28,12 @@ export class BattleScene extends Phaser.Scene {
   private movementSystem?: MovementSystem;
   private enemyAISystem?: EnemyAISystem;
   private playerRobot?: PlayerRobot;
-  private enemy?: EnemyBot;
+  private enemies: EnemyBot[] = [];
   private weaponSystem?: WeaponSystem;
   private combatSystem?: CombatSystem;
   private healthText?: Phaser.GameObjects.Text;
   private weaponText?: Phaser.GameObjects.Text;
+  private enemyCountText?: Phaser.GameObjects.Text;
   private restartKey?: Phaser.Input.Keyboard.Key;
   private weaponSlotKeys?: Record<WeaponSlot, Phaser.Input.Keyboard.Key>;
   private battleState: BattleState = 'active';
@@ -39,11 +44,12 @@ export class BattleScene extends Phaser.Scene {
 
   create(): void {
     this.battleState = 'active';
+    this.enemies = [];
     this.cameras.main.setBackgroundColor('#101820');
     this.drawArena();
 
     this.add
-      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 2-C', {
+      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 3-A', {
         color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -74,17 +80,12 @@ export class BattleScene extends Phaser.Scene {
       ARENA,
     );
 
-    this.enemy = new EnemyBot(
-      this,
-      ARENA.right - 150,
-      ARENA.centerY,
-      BATTLE_CONFIG.enemyHealth,
-    );
+    this.enemies = this.createEnemies();
     this.enemyAISystem = new EnemyAISystem(
-      this.enemy,
+      this,
+      this.enemies,
       this.playerRobot,
       ARENA,
-      BATTLE_CONFIG.enemySpeed,
     );
     this.weaponSystem = new WeaponSystem(
       this,
@@ -94,13 +95,9 @@ export class BattleScene extends Phaser.Scene {
       (attack) => this.showSwordAttack(attack),
     );
     this.combatSystem = new CombatSystem(
-      this.enemy,
+      this.enemies,
       this.playerRobot,
-      {
-        damage: BATTLE_CONFIG.enemyContactDamage,
-        cooldownMs: BATTLE_CONFIG.enemyContactCooldownMs,
-      },
-      () => this.endBattle('victory'),
+      () => this.handleEnemyDestroyed(),
       () => this.updateHealthText(),
       () => this.endBattle('defeat'),
     );
@@ -121,8 +118,17 @@ export class BattleScene extends Phaser.Scene {
         fontStyle: 'bold',
       })
       .setOrigin(0, 0);
+    this.enemyCountText = this.add
+      .text(ARENA.right - 12, ARENA.bottom + 14, '', {
+        color: '#ffb4ba',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '18px',
+        fontStyle: 'bold',
+      })
+      .setOrigin(1, 0);
     this.updateHealthText();
     this.updateWeaponText();
+    this.updateEnemyCountText();
 
     this.restartKey = this.input.keyboard?.addKey(
       Phaser.Input.Keyboard.KeyCodes.R,
@@ -154,50 +160,57 @@ export class BattleScene extends Phaser.Scene {
 
     const pointer = this.input.activePointer;
     this.playerRobot?.aimAt(pointer.worldX, pointer.worldY);
-    this.enemyAISystem?.update(delta);
+    this.enemyAISystem?.update(time, delta);
     this.weaponSystem?.update(time, delta, pointer, true);
 
     if (this.weaponSystem) {
       this.combatSystem?.update(
         time,
         this.weaponSystem.getActiveProjectiles(),
+        this.enemyAISystem?.getActiveProjectiles() ?? [],
         (projectile) =>
           this.weaponSystem?.explodeProjectile(projectile) ?? null,
       );
       for (const explosion of this.weaponSystem.consumeExplosionEvents()) {
-        this.applyExplosionDamage(explosion);
+        this.combatSystem?.applyExplosion(explosion);
       }
       for (const attack of this.weaponSystem.consumeMeleeAttackEvents()) {
-        this.applySwordDamage(attack);
+        this.combatSystem?.applyMeleeAttack(attack);
       }
     }
 
-    this.separatePlayerFromEnemy();
+    this.separatePlayerFromEnemies();
   }
 
-  private separatePlayerFromEnemy(): void {
-    if (!this.playerRobot || !this.enemy?.active) {
+  private separatePlayerFromEnemies(): void {
+    if (!this.playerRobot) {
       return;
     }
 
-    const deltaX = this.playerRobot.x - this.enemy.x;
-    const deltaY = this.playerRobot.y - this.enemy.y;
-    const minimumDistance =
-      this.playerRobot.collisionRadius + this.enemy.collisionRadius;
-    const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+    for (const enemy of this.enemies) {
+      if (!enemy.active) {
+        continue;
+      }
 
-    if (distanceSquared >= minimumDistance * minimumDistance) {
-      return;
+      const deltaX = this.playerRobot.x - enemy.x;
+      const deltaY = this.playerRobot.y - enemy.y;
+      const minimumDistance =
+        this.playerRobot.collisionRadius + enemy.collisionRadius;
+      const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+
+      if (distanceSquared >= minimumDistance * minimumDistance) {
+        continue;
+      }
+
+      const distance = Math.sqrt(distanceSquared);
+      const normalX = distance > 0 ? deltaX / distance : -1;
+      const normalY = distance > 0 ? deltaY / distance : 0;
+      const overlap = minimumDistance - distance;
+
+      this.playerRobot.x += normalX * overlap;
+      this.playerRobot.y += normalY * overlap;
+      this.movementSystem?.clampToBounds();
     }
-
-    const distance = Math.sqrt(distanceSquared);
-    const normalX = distance > 0 ? deltaX / distance : -1;
-    const normalY = distance > 0 ? deltaY / distance : 0;
-    const overlap = minimumDistance - distance;
-
-    this.playerRobot.x += normalX * overlap;
-    this.playerRobot.y += normalY * overlap;
-    this.movementSystem?.clampToBounds();
   }
 
   private updateHealthText(): void {
@@ -218,10 +231,11 @@ export class BattleScene extends Phaser.Scene {
     for (const projectile of this.weaponSystem?.getActiveProjectiles() ?? []) {
       projectile.destroy();
     }
+    this.enemyAISystem?.destroyProjectiles();
 
     const message =
       result === 'victory'
-        ? 'Victory - press R to restart'
+        ? 'Victory - all enemies destroyed - press R to restart'
         : 'Defeat - press R to restart';
     const color = result === 'victory' ? '#8effb6' : '#ff9ca5';
     const backgroundColor = result === 'victory' ? '#102b20' : '#35161b';
@@ -270,6 +284,19 @@ export class BattleScene extends Phaser.Scene {
     this.weaponText.setText(`Weapon: ${label}`);
   }
 
+  private updateEnemyCountText(): void {
+    const enemiesLeft = this.enemies.filter((enemy) => enemy.active).length;
+    this.enemyCountText?.setText(`Enemies: ${enemiesLeft}`);
+  }
+
+  private handleEnemyDestroyed(): void {
+    this.updateEnemyCountText();
+
+    if (this.enemies.every((enemy) => !enemy.active)) {
+      this.endBattle('victory');
+    }
+  }
+
   private showExplosion(explosion: ExplosionEvent): void {
     const blast = this.add.circle(
       explosion.x,
@@ -287,30 +314,6 @@ export class BattleScene extends Phaser.Scene {
       duration: 180,
       onComplete: () => blast.destroy(),
     });
-  }
-
-  private applyExplosionDamage(explosion: ExplosionEvent): void {
-    if (!this.enemy?.active) {
-      return;
-    }
-
-    const distance = Phaser.Math.Distance.Between(
-      explosion.x,
-      explosion.y,
-      this.enemy.x,
-      this.enemy.y,
-    );
-
-    if (distance > explosion.radius + this.enemy.collisionRadius) {
-      return;
-    }
-
-    this.enemy.takeDamage(explosion.damage);
-
-    if (this.enemy.health <= 0) {
-      this.enemy.destroy(true);
-      this.endBattle('victory');
-    }
   }
 
   private showSwordAttack(attack: MeleeAttackEvent): void {
@@ -338,42 +341,16 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
-  private applySwordDamage(attack: MeleeAttackEvent): void {
-    if (!this.enemy?.active) {
-      return;
-    }
+  private createEnemies(): EnemyBot[] {
+    return ENEMY_SPAWNS.map((spawn) => {
+      const config = ENEMY_CONFIGS.find((enemy) => enemy.id === spawn.id);
 
-    const toEnemy = new Phaser.Math.Vector2(
-      this.enemy.x - attack.x,
-      this.enemy.y - attack.y,
-    );
-    const distance = toEnemy.length();
+      if (!config) {
+        throw new Error(`Missing enemy config: ${spawn.id}`);
+      }
 
-    if (distance > attack.range + this.enemy.collisionRadius) {
-      return;
-    }
-
-    const attackDirection = new Phaser.Math.Vector2(
-      Math.cos(attack.angle),
-      Math.sin(attack.angle),
-    );
-    const enemyDirection =
-      distance > 0 ? toEnemy.normalize() : attackDirection.clone();
-    const angleDelta = Phaser.Math.Angle.Wrap(
-      enemyDirection.angle() - attackDirection.angle(),
-    );
-    const maxDelta = Phaser.Math.DegToRad(attack.arcDegrees / 2);
-
-    if (Math.abs(angleDelta) > maxDelta) {
-      return;
-    }
-
-    this.enemy.takeDamage(attack.damage);
-
-    if (this.enemy.health <= 0) {
-      this.enemy.destroy(true);
-      this.endBattle('victory');
-    }
+      return new EnemyBot(this, spawn.x, spawn.y, config);
+    });
   }
 
   private createMovementKeys(): MovementKeys {
@@ -381,7 +358,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (!keyboard) {
       throw new Error(
-        'Keyboard input is required for the Stage 2-C prototype.',
+        'Keyboard input is required for the Stage 3-A prototype.',
       );
     }
 

@@ -3,33 +3,45 @@
     "id": "bot_basic",
     "name": "Basic Bot",
     "kind": "basic",
+    "behavior": "chase",
     "health": 40,
     "speed": 70,
-    "damage": 10,
+    "contactDamage": 10,
     "contactDamageCooldownMs": 800
   },
   {
     "id": "bot_fast",
     "name": "Fast Bot",
     "kind": "fast",
+    "behavior": "chase",
     "health": 25,
-    "speed": 170,
-    "damage": 4
+    "speed": 115,
+    "contactDamage": 8,
+    "contactDamageCooldownMs": 800
   },
   {
     "id": "bot_shooter",
     "name": "Shooter Bot",
     "kind": "shooter",
+    "behavior": "shooter",
     "health": 35,
-    "speed": 80,
-    "damage": 8
+    "speed": 55,
+    "contactDamage": 6,
+    "contactDamageCooldownMs": 800,
+    "preferredDistance": 260,
+    "shootCooldownMs": 1200,
+    "projectileDamage": 8,
+    "projectileSpeed": 250,
+    "projectileRange": 600
   },
   {
     "id": "boss_basic",
     "name": "Arena Boss",
     "kind": "boss",
+    "behavior": "chase",
     "health": 250,
     "speed": 70,
-    "damage": 15
+    "contactDamage": 15,
+    "contactDamageCooldownMs": 800
   }
 ]

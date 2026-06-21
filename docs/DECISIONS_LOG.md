@@ -43,3 +43,12 @@
 - Closeout balance is laser 10/300/600/600, rocket 25/900/350/500/70, and sword 15/450/80/90 (damage/cooldown/speed/range/radius-or-arc).
 - Projectile dimensions, muzzle offset, and brief effect durations remain code-level presentation constants rather than balance values.
 - The current single-enemy combat API is retained for Stage 2 stability; multi-enemy generalization belongs to the explicitly approved Stage 3 scope.
+
+## Stage 3-A
+
+- `data/static/enemies.json` drives health, movement, contact damage, and shooter projectile values for enemy prototypes.
+- One `EnemyAISystem` updates the active enemy collection with only two behaviors: direct chase and preferred-distance shooter.
+- Enemy shots use a separate minimal `EnemyProjectile` because player projectiles carry weapon/explosion semantics that do not apply to enemy fire.
+- `CombatSystem` owns damage across the enemy collection: direct hits select one target, while rocket explosions and sword arcs can affect multiple targets.
+- Contact cooldowns are tracked per enemy, and victory occurs only when every spawned enemy is inactive.
+- The existing boss config remains a future data stub and is not spawned or implemented in Stage 3-A.

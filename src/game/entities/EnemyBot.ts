@@ -1,6 +1,13 @@
 import Phaser from 'phaser';
+import type { Enemy, EnemyKind } from '../types/Enemy';
 
 const ENEMY_SIZE = 52;
+const ENEMY_COLORS: Record<EnemyKind, { fill: number; stroke: number }> = {
+  basic: { fill: 0xd95763, stroke: 0xffb4ba },
+  fast: { fill: 0xf08a4b, stroke: 0xffd0a8 },
+  shooter: { fill: 0x9b6ad6, stroke: 0xd9b8ff },
+  boss: { fill: 0x6f263d, stroke: 0xd95763 },
+};
 
 export class EnemyBot extends Phaser.GameObjects.Container {
   private readonly healthText: Phaser.GameObjects.Text;
@@ -10,13 +17,14 @@ export class EnemyBot extends Phaser.GameObjects.Container {
     scene: Phaser.Scene,
     x: number,
     y: number,
-    readonly maxHealth: number,
+    readonly config: Enemy,
   ) {
     super(scene, x, y);
-    this.currentHealth = maxHealth;
+    this.currentHealth = config.health;
+    const colors = ENEMY_COLORS[config.kind];
 
-    const body = scene.add.circle(0, 0, ENEMY_SIZE / 2, 0xd95763);
-    body.setStrokeStyle(3, 0xffb4ba);
+    const body = scene.add.circle(0, 0, ENEMY_SIZE / 2, colors.fill);
+    body.setStrokeStyle(3, colors.stroke);
 
     this.healthText = scene.add
       .text(0, -ENEMY_SIZE / 2 - 18, '', {
@@ -37,6 +45,10 @@ export class EnemyBot extends Phaser.GameObjects.Container {
     return this.currentHealth;
   }
 
+  get maxHealth(): number {
+    return this.config.health;
+  }
+
   get collisionRadius(): number {
     return ENEMY_SIZE / 2;
   }
@@ -45,7 +57,7 @@ export class EnemyBot extends Phaser.GameObjects.Container {
     this.currentHealth = Phaser.Math.Clamp(
       this.currentHealth - amount,
       0,
-      this.maxHealth,
+      this.config.health,
     );
     this.updateHealthText();
   }
@@ -61,7 +73,7 @@ export class EnemyBot extends Phaser.GameObjects.Container {
 
   private updateHealthText(): void {
     this.healthText.setText(
-      `Dummy HP: ${this.currentHealth}/${this.maxHealth}`,
+      `${this.config.name}: ${this.currentHealth}/${this.config.health}`,
     );
   }
 }
