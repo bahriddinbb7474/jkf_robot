@@ -1,7 +1,7 @@
 # Current State
 
-- Project status: just initialized.
-- Current stage: Stage 0-A foundation.
-- Available now: Vite/TypeScript/Phaser bootstrap, project structure, static data stubs, and a start screen.
-- Gameplay and persistence are not implemented.
-- Next stage after explicit approval: Stage 0-B or Stage 1, as directed by the architect/user.
+- Project status: foundation complete; first battle movement prototype available.
+- Current stage: Stage 1-A — `BattleScene` and WASD movement.
+- Available now: start-screen transition to a bounded arena, a primitive player robot, and normalized WASD movement.
+- Shooting, weapons, enemies, HP, progression, and persistence are not implemented.
+- Next work requires explicit architect/user approval; do not begin Stage 1-B automatically.

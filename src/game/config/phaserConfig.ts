@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from '../scenes/BootScene';
+import { BattleScene } from '../scenes/BattleScene';
 import { StartScene } from '../scenes/StartScene';
 
 export const phaserConfig: Phaser.Types.Core.GameConfig = {
@@ -12,5 +13,5 @@ export const phaserConfig: Phaser.Types.Core.GameConfig = {
     width: 960,
     height: 540,
   },
-  scene: [BootScene, StartScene],
+  scene: [BootScene, StartScene, BattleScene],
 };
