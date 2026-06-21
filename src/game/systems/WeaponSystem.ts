@@ -113,8 +113,8 @@ export class WeaponSystem {
         x: this.owner.x,
         y: this.owner.y,
         angle: this.owner.getAimAngle(),
-        range: weapon.range ?? 80,
-        arcDegrees: weapon.arcDegrees ?? 90,
+        range: weapon.range,
+        arcDegrees: weapon.arcDegrees,
         damage: weapon.damage,
       };
 
@@ -137,9 +137,10 @@ export class WeaponSystem {
     const projectileConfig: ProjectileConfig = {
       weaponType: weapon.type,
       damage: weapon.damage,
-      speed: weapon.projectileSpeed ?? 600,
-      range: weapon.range ?? 900,
-      explosionRadius: weapon.explosionRadius,
+      speed: weapon.projectileSpeed,
+      range: weapon.range,
+      explosionRadius:
+        weapon.type === 'rocket' ? weapon.explosionRadius : undefined,
     };
     const projectile = new Projectile(
       this.scene,

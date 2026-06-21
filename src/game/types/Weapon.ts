@@ -1,14 +1,30 @@
 export type WeaponType = 'laser' | 'rocket' | 'sword';
 
-export interface Weapon {
+interface WeaponBase {
   id: string;
   name: string;
-  type: WeaponType;
   damage: number;
   cooldownMs: number;
-  projectileSpeed?: number;
-  range?: number;
-  explosionRadius?: number;
-  arcDegrees?: number;
   price: number;
 }
+
+export interface LaserWeapon extends WeaponBase {
+  type: 'laser';
+  projectileSpeed: number;
+  range: number;
+}
+
+export interface RocketWeapon extends WeaponBase {
+  type: 'rocket';
+  projectileSpeed: number;
+  range: number;
+  explosionRadius: number;
+}
+
+export interface SwordWeapon extends WeaponBase {
+  type: 'sword';
+  range: number;
+  arcDegrees: number;
+}
+
+export type Weapon = LaserWeapon | RocketWeapon | SwordWeapon;

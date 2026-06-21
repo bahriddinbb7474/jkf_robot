@@ -6,7 +6,7 @@
     "damage": 10,
     "cooldownMs": 300,
     "projectileSpeed": 600,
-    "range": 900,
+    "range": 600,
     "price": 0
   },
   {

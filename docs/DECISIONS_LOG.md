@@ -35,3 +35,11 @@
 - Contact deals 10 damage with an 800 ms cooldown managed by `CombatSystem`.
 - Battle state is explicitly `active`, `victory`, or `defeat`; all movement and combat updates stop outside `active`.
 - End-state projectiles are removed, and R restarts the same scene with fresh state.
+
+## Stage 2-D
+
+- `data/static/weapons.json` is the source of truth for weapon damage, cooldown, speed, range, explosion radius, and sword arc.
+- Discriminated weapon types require every behavior-specific config field; runtime combat code no longer substitutes hidden balance defaults.
+- Closeout balance is laser 10/300/600/600, rocket 25/900/350/500/70, and sword 15/450/80/90 (damage/cooldown/speed/range/radius-or-arc).
+- Projectile dimensions, muzzle offset, and brief effect durations remain code-level presentation constants rather than balance values.
+- The current single-enemy combat API is retained for Stage 2 stability; multi-enemy generalization belongs to the explicitly approved Stage 3 scope.

@@ -20,17 +20,21 @@
 - [ ] Left click fires a laser toward the pointer.
 - [ ] Laser cooldown prevents firing faster than once per 300 ms.
 - [ ] Laser projectiles are removed on hit, range limit, or leaving the arena.
-- [ ] Laser still damages the enemy when laser is selected.
+- [ ] Laser uses config values: 10 damage, 300 ms cooldown, 600 px/s speed, and 600 px range.
+- [ ] Laser deals direct damage once per projectile when laser is selected.
 - [ ] Rocket fires on left click when selected.
 - [ ] Rocket is visibly slower than laser.
 - [ ] Rocket cooldown is noticeably longer than laser cooldown.
-- [ ] Rocket explosion visual appears on hit or expiry.
-- [ ] Enemy takes damage from rocket explosion radius.
+- [ ] Rocket uses config values: 25 damage, 900 ms cooldown, 350 px/s speed, 500 px range, and 70 px explosion radius.
+- [ ] Rocket explosion visual appears on hit, range expiry, or arena exit.
+- [ ] Enemy takes one damage application when inside the rocket explosion radius.
 - [ ] Sword melee attack works when selected.
 - [ ] Sword only hits a nearby enemy.
 - [ ] Sword does not hit an enemy behind the player.
 - [ ] Sword cooldown prevents melee spam.
 - [ ] Sword attack visual appears briefly in front of the player.
+- [ ] Sword uses config values: 15 damage, 450 ms cooldown, 80 px range, and 90 degree arc.
+- [ ] One sword swing cannot damage the same enemy multiple times.
 - [ ] Exactly one enemy is visible with HP and moves directly toward the player.
 - [ ] Player HP is visible as `HP: current / 100`.
 - [ ] Enemy contact reduces player HP by 10 no faster than once per 800 ms.
@@ -39,6 +43,7 @@
 - [ ] Enemy disappears at 0 HP and the Victory state appears.
 - [ ] Player reaching 0 HP shows the Defeat state.
 - [ ] Movement, aiming, firing, AI, and damage stop after Victory or Defeat.
-- [ ] R restarts `BattleScene` with full player/enemy HP.
+- [ ] No projectile, explosion, or melee damage continues after Victory or Defeat.
+- [ ] R restarts `BattleScene` with full player/enemy HP and laser selected.
 - [ ] Static JSON files parse successfully.
 - [ ] Git working tree is clean after commit.
