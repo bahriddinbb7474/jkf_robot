@@ -82,3 +82,13 @@
 - Rocket polish keeps the fire-time mouse position as the homing target, preserving manual aim instead of adding enemy auto-targeting.
 - Rocket launch curve and turn rate are config-driven in `data/static/weapons.json`; damage, cooldown, speed, range, and explosion radius remain unchanged.
 - Homing is intentionally lightweight: no pathfinding, obstacle avoidance, wall logic, new weapons, wave changes, or boss changes are introduced.
+
+## Stage 4
+
+- Player persistence is stored in one versioned local browser document under `jkf_robot.players.v1`.
+- `LocalStorageService` is the only code path that accesses `localStorage`; Phaser scenes use `PlayerService`.
+- `PlayerService` owns player creation, current player selection, profile listing, save loading, and battle result counters.
+- New players start with configured starting money, the basic static parts, and the existing laser/rocket/sword weapon ids.
+- `StartScene` keeps player creation and selection in the existing scene instead of adding a dedicated player-select scene.
+- `BattleScene` receives only `playerId`, reloads the save through `PlayerService`, and returns to `StartScene` if the id is missing or invalid.
+- Battle victory/defeat increments wins/losses once on the final state transition; R restart keeps the same selected player context.
