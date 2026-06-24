@@ -132,6 +132,13 @@ export class StartScene extends Phaser.Scene {
         ? currentPlayerId
         : (players[0]?.id ?? null);
 
+    if (
+      this.selectedPlayerId !== null &&
+      this.selectedPlayerId !== currentPlayerId
+    ) {
+      playerService.setCurrentPlayer(this.selectedPlayerId);
+    }
+
     this.renderPlayerList(players);
     this.updateStartButtonState();
   }
@@ -185,6 +192,8 @@ export class StartScene extends Phaser.Scene {
 
   private handleNameInput(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
+      event.preventDefault();
+
       if (this.nameBuffer.length > 0) {
         this.createPlayer();
       } else {
@@ -194,6 +203,7 @@ export class StartScene extends Phaser.Scene {
     }
 
     if (event.key === 'Backspace') {
+      event.preventDefault();
       this.nameBuffer = this.nameBuffer.slice(0, -1);
       this.updateNameInputText();
       return;
