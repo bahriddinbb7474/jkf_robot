@@ -30,3 +30,18 @@
 9. Create/select a second player and confirm its wins/losses are independent.
 10. Lose a battle and confirm only the selected player's losses increase by one.
 11. Corrupt `jkf_robot.players.v1` in browser storage and confirm StartScene recovers without crashing.
+
+## Stage 5
+
+1. Run `npm.cmd run format`.
+2. Run `npm.cmd run build`.
+3. Run `npm.cmd run lint`.
+4. Run the game locally.
+5. Select or create a player and open Garage.
+6. Confirm Garage shows player name, money, current build, current stats, and a robot preview.
+7. Select owned parts in body/head/legs/armor/color slots and confirm the preview/stats update before saving.
+8. Save the build, leave Garage, return, and confirm the selected build persists.
+9. Reload the browser and confirm the saved build still appears.
+10. Start battle from Garage and confirm HP max, player color, armor/damage HUD text, and movement speed reflect the saved build.
+11. Confirm laser/rocket/sword weapon switching still works and battle waves/boss/victory/defeat/R restart still work.
+12. Confirm two players keep separate saved builds.

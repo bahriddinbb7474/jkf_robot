@@ -92,3 +92,14 @@
 - `StartScene` keeps player creation and selection in the existing scene instead of adding a dedicated player-select scene.
 - `BattleScene` receives only `playerId`, reloads the save through `PlayerService`, and returns to `StartScene` if the id is missing or invalid.
 - Battle victory/defeat increments wins/losses once on the final state transition; R restart keeps the same selected player context.
+
+## Stage 5
+
+- Stage 5 keeps the existing save schema: no `ownedWeaponIds` and no player storage version migration.
+- All three current weapons remain available through `currentBuild.weaponIds`; weapon purchases and weapon inventory are deferred.
+- `data/static/parts.json` now carries simple MVP stat modifiers: `maxHpBonus`, `armorBonus`, `speedBonus`, `damageMultiplierBonus`, and `colorHex`.
+- `StatsSystem` is the single calculation boundary for robot max HP, armor, speed, damage multiplier, weapons, and color.
+- `GarageScene` is a functional MVP UI only: text lists, simple robot preview, no final assets, no layered robot assembly, and no animations.
+- Existing players automatically receive zero-price parts in `ownedPartIds` during save normalization, without changing the save schema.
+- Battle applies garage stats through narrow constructor/config parameters in `PlayerRobot`, `MovementSystem`, `WeaponSystem`, and `CombatSystem`.
+- Armor is flat damage reduction with a minimum of 1 incoming damage; outgoing damage is rounded after applying the damage multiplier.
