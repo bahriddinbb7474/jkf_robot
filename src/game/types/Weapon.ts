@@ -19,6 +19,10 @@ export interface RocketWeapon extends WeaponBase {
   projectileSpeed: number;
   range: number;
   explosionRadius: number;
+  homingDelayMs: number;
+  maxTurnRateDeg: number;
+  launchCurveDurationMs: number;
+  launchCurveDeg: number;
 }
 
 export interface SwordWeapon extends WeaponBase {

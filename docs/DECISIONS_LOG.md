@@ -76,3 +76,9 @@
 - Enemy and boss behavior values remain sourced from `data/static/enemies.json`; AI code keeps only presentation/steering constants.
 - Stage 3 closes with the direct `StartScene` to `BattleScene` prototype flow. Player creation and local persistence are deferred to an explicitly approved Stage 4.
 - Existing wave, boss, projectile, victory/defeat, and restart cleanup paths are accepted as the Stage 3 baseline.
+
+## Stage 3-E
+
+- Rocket polish keeps the fire-time mouse position as the homing target, preserving manual aim instead of adding enemy auto-targeting.
+- Rocket launch curve and turn rate are config-driven in `data/static/weapons.json`; damage, cooldown, speed, range, and explosion radius remain unchanged.
+- Homing is intentionally lightweight: no pathfinding, obstacle avoidance, wall logic, new weapons, wave changes, or boss changes are introduced.

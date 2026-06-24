@@ -26,6 +26,9 @@
 - [ ] Rocket is visibly slower than laser.
 - [ ] Rocket cooldown is noticeably longer than laser cooldown.
 - [ ] Rocket uses config values: 25 damage, 900 ms cooldown, 350 px/s speed, 500 px range, and 70 px explosion radius.
+- [ ] Rocket has a small launch curve before homing starts.
+- [ ] Rocket smoothly turns toward the fire-time mouse target without instant 180 degree snaps.
+- [ ] Rocket homing does not behave chaotically or make the weapon feel auto-winning.
 - [ ] Rocket explosion visual appears on hit, range expiry, or arena exit.
 - [ ] Enemy takes one damage application when inside the rocket explosion radius.
 - [ ] Sword melee attack works when selected.

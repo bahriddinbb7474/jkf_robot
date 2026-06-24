@@ -18,6 +18,10 @@
     "projectileSpeed": 350,
     "range": 500,
     "explosionRadius": 70,
+    "homingDelayMs": 160,
+    "maxTurnRateDeg": 120,
+    "launchCurveDurationMs": 160,
+    "launchCurveDeg": 14,
     "price": 150
   },
   {

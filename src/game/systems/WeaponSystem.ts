@@ -141,6 +141,18 @@ export class WeaponSystem {
       range: weapon.range,
       explosionRadius:
         weapon.type === 'rocket' ? weapon.explosionRadius : undefined,
+      homingTarget:
+        weapon.type === 'rocket'
+          ? new Phaser.Math.Vector2(targetX, targetY)
+          : undefined,
+      homingDelayMs:
+        weapon.type === 'rocket' ? weapon.homingDelayMs : undefined,
+      maxTurnRateDeg:
+        weapon.type === 'rocket' ? weapon.maxTurnRateDeg : undefined,
+      launchCurveDurationMs:
+        weapon.type === 'rocket' ? weapon.launchCurveDurationMs : undefined,
+      launchCurveDeg:
+        weapon.type === 'rocket' ? weapon.launchCurveDeg : undefined,
     };
     const projectile = new Projectile(
       this.scene,
