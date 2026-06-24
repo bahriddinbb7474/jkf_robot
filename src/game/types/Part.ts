@@ -5,4 +5,9 @@ export interface Part {
   name: string;
   slot: PartSlot;
   price: number;
+  maxHpBonus?: number;
+  armorBonus?: number;
+  speedBonus?: number;
+  damageMultiplierBonus?: number;
+  colorHex?: string;
 }

@@ -1,7 +1,84 @@
 [
-  { "id": "body_basic", "name": "Basic Body", "slot": "body", "price": 0 },
-  { "id": "head_basic", "name": "Basic Head", "slot": "head", "price": 0 },
-  { "id": "legs_basic", "name": "Basic Legs", "slot": "legs", "price": 0 },
-  { "id": "armor_basic", "name": "Basic Armor", "slot": "armor", "price": 0 },
-  { "id": "color_basic", "name": "Steel Blue", "slot": "color", "price": 0 }
+  {
+    "id": "body_basic",
+    "name": "Basic Body",
+    "slot": "body",
+    "price": 0,
+    "maxHpBonus": 0,
+    "damageMultiplierBonus": 0
+  },
+  {
+    "id": "body_guard",
+    "name": "Guard Body",
+    "slot": "body",
+    "price": 0,
+    "maxHpBonus": 25,
+    "speedBonus": -8,
+    "damageMultiplierBonus": 0
+  },
+  {
+    "id": "head_basic",
+    "name": "Basic Head",
+    "slot": "head",
+    "price": 0,
+    "damageMultiplierBonus": 0
+  },
+  {
+    "id": "head_targeting",
+    "name": "Targeting Head",
+    "slot": "head",
+    "price": 0,
+    "damageMultiplierBonus": 0.1
+  },
+  {
+    "id": "legs_basic",
+    "name": "Basic Legs",
+    "slot": "legs",
+    "price": 0,
+    "speedBonus": 0
+  },
+  {
+    "id": "legs_sprint",
+    "name": "Sprint Legs",
+    "slot": "legs",
+    "price": 0,
+    "speedBonus": 35,
+    "armorBonus": -1
+  },
+  {
+    "id": "armor_basic",
+    "name": "Basic Armor",
+    "slot": "armor",
+    "price": 0,
+    "armorBonus": 0
+  },
+  {
+    "id": "armor_plated",
+    "name": "Plated Armor",
+    "slot": "armor",
+    "price": 0,
+    "armorBonus": 3,
+    "speedBonus": -12
+  },
+  {
+    "id": "color_basic",
+    "name": "Steel Blue",
+    "slot": "color",
+    "price": 0,
+    "colorHex": "#32b8d9"
+  },
+  {
+    "id": "color_cobalt",
+    "name": "Cobalt Glow",
+    "slot": "color",
+    "price": 0,
+    "colorHex": "#2f6fff"
+  },
+  {
+    "id": "color_crimson",
+    "name": "Crimson Signal",
+    "slot": "color",
+    "price": 0,
+    "colorHex": "#dc4f63"
+  }
 ]
