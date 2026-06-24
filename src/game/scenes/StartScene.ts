@@ -8,6 +8,7 @@ export class StartScene extends Phaser.Scene {
   private nameInputText?: Phaser.GameObjects.Text;
   private playerListContainer?: Phaser.GameObjects.Container;
   private startButton?: Phaser.GameObjects.Text;
+  private garageButton?: Phaser.GameObjects.Text;
   private statusText?: Phaser.GameObjects.Text;
   private readonly keyDownHandler = (event: KeyboardEvent): void => {
     this.handleNameInput(event);
@@ -90,8 +91,27 @@ export class StartScene extends Phaser.Scene {
 
     this.playerListContainer = this.add.container(90, 300);
 
+    this.garageButton = this.add
+      .text(700, 470, 'Garage', {
+        backgroundColor: '#143652',
+        color: '#f4f7fb',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '22px',
+        padding: { x: 22, y: 12 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    this.garageButton.on('pointerover', () =>
+      this.garageButton?.setBackgroundColor(
+        this.selectedPlayerId ? '#1d547d' : '#2a3440',
+      ),
+    );
+    this.garageButton.on('pointerout', () => this.updateActionButtonState());
+    this.garageButton.on('pointerup', () => this.openGarage());
+
     this.startButton = this.add
-      .text(760, 470, 'Start Battle', {
+      .text(840, 470, 'Start Battle', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -106,7 +126,7 @@ export class StartScene extends Phaser.Scene {
         this.selectedPlayerId ? '#1d547d' : '#2a3440',
       ),
     );
-    this.startButton.on('pointerout', () => this.updateStartButtonState());
+    this.startButton.on('pointerout', () => this.updateActionButtonState());
     this.startButton.on('pointerup', () => this.startBattle());
 
     this.statusText = this.add
@@ -119,7 +139,7 @@ export class StartScene extends Phaser.Scene {
       .setOrigin(0, 0.5);
 
     this.updateNameInputText();
-    this.updateStartButtonState();
+    this.updateActionButtonState();
   }
 
   private refreshPlayers(): void {
@@ -140,7 +160,7 @@ export class StartScene extends Phaser.Scene {
     }
 
     this.renderPlayerList(players);
-    this.updateStartButtonState();
+    this.updateActionButtonState();
   }
 
   private renderPlayerList(players: PlayerProfile[]): void {
@@ -243,6 +263,15 @@ export class StartScene extends Phaser.Scene {
     this.scene.start('BattleScene', { playerId: this.selectedPlayerId });
   }
 
+  private openGarage(): void {
+    if (this.selectedPlayerId === null) {
+      this.setStatus('Create or select a player first.');
+      return;
+    }
+
+    this.scene.start('GarageScene', { playerId: this.selectedPlayerId });
+  }
+
   private updateNameInputText(): void {
     const label =
       this.nameBuffer.length > 0 ? this.nameBuffer : 'Type player name...';
@@ -252,11 +281,15 @@ export class StartScene extends Phaser.Scene {
     );
   }
 
-  private updateStartButtonState(): void {
+  private updateActionButtonState(): void {
     this.startButton?.setBackgroundColor(
       this.selectedPlayerId ? '#143652' : '#2a3440',
     );
     this.startButton?.setColor(this.selectedPlayerId ? '#f4f7fb' : '#91a4bd');
+    this.garageButton?.setBackgroundColor(
+      this.selectedPlayerId ? '#143652' : '#2a3440',
+    );
+    this.garageButton?.setColor(this.selectedPlayerId ? '#f4f7fb' : '#91a4bd');
   }
 
   private setStatus(message: string): void {
