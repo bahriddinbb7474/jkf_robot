@@ -17,6 +17,7 @@ const STARTING_WEAPON_IDS = ['laser_basic', 'rocket_basic', 'sword_basic'];
 
 type StaticPart = {
   id: string;
+  price: number;
   slot: string;
 };
 
@@ -211,9 +212,9 @@ export class PlayerService {
       return this.createEmptyState();
     }
 
-    const players = state.players.filter((player) =>
-      this.isValidPlayerSave(player),
-    );
+    const players = state.players
+      .filter((player) => this.isValidPlayerSave(player))
+      .map((player) => this.normalizePlayerSave(player));
     const currentPlayerId =
       typeof state.currentPlayerId === 'string' &&
       players.some((player) => player.id === state.currentPlayerId)
@@ -232,6 +233,22 @@ export class PlayerService {
       version: PLAYER_STORAGE_VERSION,
       currentPlayerId: null,
       players: [],
+    };
+  }
+
+  private normalizePlayerSave(player: PlayerSave): PlayerSave {
+    const defaultOwnedPartIds = this.getDefaultPartIds();
+
+    return {
+      ...player,
+      unlockedPartIds: this.mergeUniqueIds(
+        player.unlockedPartIds,
+        defaultOwnedPartIds,
+      ),
+      ownedPartIds: this.mergeUniqueIds(
+        player.ownedPartIds,
+        defaultOwnedPartIds,
+      ),
     };
   }
 
@@ -300,7 +317,7 @@ export class PlayerService {
   }
 
   private getDefaultPartIds(): string[] {
-    return parts.map((part) => part.id);
+    return parts.filter((part) => part.price === 0).map((part) => part.id);
   }
 
   private getPartIdBySlot(slot: string): string {
@@ -338,6 +355,10 @@ export class PlayerService {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
+  }
+
+  private mergeUniqueIds(existingIds: string[], addedIds: string[]): string[] {
+    return [...new Set([...existingIds, ...addedIds])];
   }
 
   private areStatesEqual(a: unknown, b: PlayerStorageState): boolean {

@@ -1,16 +1,31 @@
 import Phaser from 'phaser';
 import { playerService } from '../services/PlayerService';
 import { StatsSystem } from '../systems/StatsSystem';
+import type { Part, PartSlot } from '../types/Part';
 import type { PlayerSave } from '../types/PlayerSave';
+import type { RobotBuild } from '../types/RobotBuild';
 import type { RobotStats } from '../types/RobotStats';
 
 type GarageSceneData = {
   playerId?: string;
 };
 
+const PART_SLOTS: Array<{ key: PartSlot; label: string }> = [
+  { key: 'body', label: 'Body' },
+  { key: 'head', label: 'Head' },
+  { key: 'legs', label: 'Legs' },
+  { key: 'armor', label: 'Armor' },
+  { key: 'color', label: 'Color' },
+];
+
 export class GarageScene extends Phaser.Scene {
   private playerId: string | null = null;
   private playerSave: PlayerSave | null = null;
+  private workingBuild?: RobotBuild;
+  private previewContainer?: Phaser.GameObjects.Container;
+  private partsContainer?: Phaser.GameObjects.Container;
+  private statsContainer?: Phaser.GameObjects.Container;
+  private statusText?: Phaser.GameObjects.Text;
 
   constructor() {
     super('GarageScene');
@@ -30,10 +45,9 @@ export class GarageScene extends Phaser.Scene {
       return;
     }
 
+    this.workingBuild = this.cloneBuild(this.playerSave.currentBuild);
     this.cameras.main.setBackgroundColor('#08111f');
     this.drawGarageBackdrop();
-
-    const stats = StatsSystem.calculate(this.playerSave.currentBuild);
 
     this.add
       .text(this.scale.width / 2, 34, 'Garage', {
@@ -57,98 +71,283 @@ export class GarageScene extends Phaser.Scene {
       fontSize: '18px',
     });
 
-    this.drawRobotPreview(250, 284, stats);
-    this.renderBuildSummary(510, 96);
-    this.renderStatsSummary(510, 286, stats);
-    this.createButton(100, 484, 'Back', () => this.scene.start('StartScene'));
-    this.createButton(810, 484, 'Start Battle', () =>
+    this.previewContainer = this.add.container(0, 0);
+    this.partsContainer = this.add.container(0, 0);
+    this.statsContainer = this.add.container(0, 0);
+
+    this.statusText = this.add
+      .text(250, 486, '', {
+        color: '#91a4bd',
+        fixedWidth: 390,
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '16px',
+      })
+      .setOrigin(0, 0.5);
+
+    this.createButton(82, 484, 'Back', () => this.scene.start('StartScene'));
+    this.createButton(700, 484, 'Save Build', () => this.saveBuild());
+    this.createButton(842, 484, 'Start Battle', () =>
       this.scene.start('BattleScene', { playerId: this.playerId }),
     );
+
+    this.renderGarage();
   }
 
-  private renderBuildSummary(x: number, y: number): void {
-    if (!this.playerSave) {
+  private renderGarage(): void {
+    if (!this.workingBuild) {
       return;
     }
 
-    const build = this.playerSave.currentBuild;
-    const rows = [
-      ['Body', build.bodyId],
-      ['Head', build.headId],
-      ['Legs', build.legsId],
-      ['Armor', build.armorId],
-      ['Color', build.colorId],
-      ['Weapons', build.weaponIds.join(', ')],
-    ];
+    const stats = StatsSystem.calculate(this.workingBuild);
 
-    this.add.text(x, y, 'Current build', {
-      color: '#d8e4ed',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '24px',
-      fontStyle: 'bold',
-    });
+    this.renderRobotPreview(250, 284, stats);
+    this.renderPartSelection(440, 92);
+    this.renderStatsSummary(700, 92, stats);
+  }
 
-    rows.forEach(([label, value], index) => {
-      this.add.text(x, y + 38 + index * 26, `${label}: ${value}`, {
-        color: '#c8d3df',
+  private renderPartSelection(x: number, y: number): void {
+    if (!this.playerSave || !this.workingBuild || !this.partsContainer) {
+      return;
+    }
+
+    this.partsContainer.removeAll(true);
+    this.partsContainer.add(
+      this.add.text(x, y, 'Owned parts', {
+        color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '17px',
+        fontSize: '23px',
+        fontStyle: 'bold',
+      }),
+    );
+
+    PART_SLOTS.forEach((slot, slotIndex) => {
+      const slotY = y + 36 + slotIndex * 70;
+      const ownedParts = StatsSystem.getPartsBySlot(slot.key).filter((part) =>
+        this.playerSave?.ownedPartIds.includes(part.id),
+      );
+
+      this.partsContainer?.add(
+        this.add.text(x, slotY, slot.label, {
+          color: '#8effb6',
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '16px',
+          fontStyle: 'bold',
+        }),
+      );
+
+      ownedParts.forEach((part, partIndex) => {
+        const selected = this.getSelectedPartId(slot.key) === part.id;
+        const option = this.add
+          .text(x, slotY + 24 + partIndex * 24, this.formatPartOption(part), {
+            backgroundColor: selected ? '#1d547d' : '#101820',
+            color: selected ? '#ffffff' : '#c8d3df',
+            fixedWidth: 210,
+            fontFamily: 'system-ui, sans-serif',
+            fontSize: '14px',
+            padding: { x: 8, y: 4 },
+          })
+          .setInteractive({ useHandCursor: true });
+
+        option.on('pointerup', () => this.selectPart(slot.key, part.id));
+        this.partsContainer?.add(option);
       });
     });
   }
 
   private renderStatsSummary(x: number, y: number, stats: RobotStats): void {
-    const rows = [
+    if (!this.workingBuild || !this.statsContainer) {
+      return;
+    }
+
+    this.statsContainer.removeAll(true);
+
+    const buildRows = [
+      `Body: ${this.getPartName(this.workingBuild.bodyId)}`,
+      `Head: ${this.getPartName(this.workingBuild.headId)}`,
+      `Legs: ${this.getPartName(this.workingBuild.legsId)}`,
+      `Armor: ${this.getPartName(this.workingBuild.armorId)}`,
+      `Color: ${this.getPartName(this.workingBuild.colorId)}`,
+      `Weapons: ${stats.weaponIds.length}`,
+    ];
+    const statRows = [
       `Max HP: ${stats.maxHp}`,
       `Armor: ${stats.armor}`,
       `Speed: ${stats.speed}`,
       `Damage: x${stats.damageMultiplier.toFixed(2)}`,
-      `Weapons: ${stats.weaponIds.length}`,
       `Color: ${stats.colorHex}`,
     ];
 
-    this.add.text(x, y, 'Stats', {
-      color: '#d8e4ed',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '24px',
-      fontStyle: 'bold',
+    this.statsContainer.add(
+      this.add.text(x, y, 'Current build', {
+        color: '#d8e4ed',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '23px',
+        fontStyle: 'bold',
+      }),
+    );
+
+    buildRows.forEach((row, index) => {
+      this.statsContainer?.add(
+        this.add.text(x, y + 34 + index * 24, row, {
+          color: '#c8d3df',
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '15px',
+        }),
+      );
     });
 
-    rows.forEach((row, index) => {
-      this.add.text(x, y + 38 + index * 26, row, {
-        color: '#b8d8ff',
+    this.statsContainer.add(
+      this.add.text(x, y + 206, 'Stats', {
+        color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '18px',
-      });
+        fontSize: '23px',
+        fontStyle: 'bold',
+      }),
+    );
+
+    statRows.forEach((row, index) => {
+      this.statsContainer?.add(
+        this.add.text(x, y + 240 + index * 24, row, {
+          color: '#b8d8ff',
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '16px',
+        }),
+      );
     });
   }
 
-  private drawRobotPreview(x: number, y: number, stats: RobotStats): void {
-    this.add
-      .text(x, 118, 'Robot preview', {
-        color: '#d8e4ed',
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '24px',
-        fontStyle: 'bold',
-      })
-      .setOrigin(0.5);
+  private renderRobotPreview(x: number, y: number, stats: RobotStats): void {
+    if (!this.previewContainer) {
+      return;
+    }
 
-    this.add.circle(x, y + 54, 96, 0x102235, 0.9).setStrokeStyle(3, 0x2f6fff);
-    this.add.rectangle(x, y, 92, 100, stats.color).setStrokeStyle(4, 0xbcefff);
-    this.add.rectangle(x, y - 66, 70, 34, 0xc8d3df).setStrokeStyle(3, 0x111820);
-    this.add
-      .rectangle(x - 82, y - 8, 44, 82, stats.color)
-      .setStrokeStyle(3, 0x111820);
-    this.add
-      .rectangle(x + 82, y - 8, 44, 82, stats.color)
-      .setStrokeStyle(3, 0x111820);
-    this.add
-      .rectangle(x - 34, y + 78, 34, 56, 0xc8d3df)
-      .setStrokeStyle(3, 0x111820);
-    this.add
-      .rectangle(x + 34, y + 78, 34, 56, 0xc8d3df)
-      .setStrokeStyle(3, 0x111820);
-    this.add.circle(x, y - 10, 18, 0x57d4ff, 0.9);
+    this.previewContainer.removeAll(true);
+    this.previewContainer.add(
+      this.add
+        .text(x, 118, 'Robot preview', {
+          color: '#d8e4ed',
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '24px',
+          fontStyle: 'bold',
+        })
+        .setOrigin(0.5),
+    );
+
+    this.previewContainer.add(
+      this.add.circle(x, y + 54, 96, 0x102235, 0.9).setStrokeStyle(3, 0x2f6fff),
+    );
+    this.previewContainer.add(
+      this.add
+        .rectangle(x, y, 92, 100, stats.color)
+        .setStrokeStyle(4, 0xbcefff),
+    );
+    this.previewContainer.add(
+      this.add
+        .rectangle(x, y - 66, 70, 34, 0xc8d3df)
+        .setStrokeStyle(3, 0x111820),
+    );
+    this.previewContainer.add(
+      this.add
+        .rectangle(x - 82, y - 8, 44, 82, stats.color)
+        .setStrokeStyle(3, 0x111820),
+    );
+    this.previewContainer.add(
+      this.add
+        .rectangle(x + 82, y - 8, 44, 82, stats.color)
+        .setStrokeStyle(3, 0x111820),
+    );
+    this.previewContainer.add(
+      this.add
+        .rectangle(x - 34, y + 78, 34, 56, 0xc8d3df)
+        .setStrokeStyle(3, 0x111820),
+    );
+    this.previewContainer.add(
+      this.add
+        .rectangle(x + 34, y + 78, 34, 56, 0xc8d3df)
+        .setStrokeStyle(3, 0x111820),
+    );
+    this.previewContainer.add(this.add.circle(x, y - 10, 18, 0x57d4ff, 0.9));
+  }
+
+  private selectPart(slot: PartSlot, partId: string): void {
+    if (!this.workingBuild) {
+      return;
+    }
+
+    this.workingBuild = {
+      ...this.workingBuild,
+      [`${slot}Id`]: partId,
+    };
+    this.setStatus('Unsaved build changes.');
+    this.renderGarage();
+  }
+
+  private saveBuild(): void {
+    if (!this.playerSave || !this.workingBuild) {
+      return;
+    }
+
+    this.playerSave = {
+      ...this.playerSave,
+      currentBuild: this.cloneBuild(this.workingBuild),
+    };
+    playerService.savePlayer(this.playerSave);
+    this.setStatus('Build saved.');
+  }
+
+  private getSelectedPartId(slot: PartSlot): string | null {
+    if (!this.workingBuild) {
+      return null;
+    }
+
+    switch (slot) {
+      case 'body':
+        return this.workingBuild.bodyId;
+      case 'head':
+        return this.workingBuild.headId;
+      case 'legs':
+        return this.workingBuild.legsId;
+      case 'armor':
+        return this.workingBuild.armorId;
+      case 'color':
+        return this.workingBuild.colorId;
+    }
+  }
+
+  private formatPartOption(part: Part): string {
+    const modifiers = [
+      this.formatModifier('HP', part.maxHpBonus),
+      this.formatModifier('ARM', part.armorBonus),
+      this.formatModifier('SPD', part.speedBonus),
+      this.formatModifier('DMG', part.damageMultiplierBonus),
+    ].filter((modifier) => modifier.length > 0);
+
+    return modifiers.length > 0
+      ? `${part.name}  ${modifiers.join(' ')}`
+      : part.name;
+  }
+
+  private formatModifier(label: string, value: number | undefined): string {
+    if (value === undefined || value === 0) {
+      return '';
+    }
+
+    const prefix = value > 0 ? '+' : '';
+    const formattedValue =
+      label === 'DMG' ? value.toFixed(2).replace(/^0/, '') : value.toString();
+
+    return `${label}${prefix}${formattedValue}`;
+  }
+
+  private getPartName(partId: string): string {
+    return StatsSystem.getPartById(partId)?.name ?? partId;
+  }
+
+  private cloneBuild(build: RobotBuild): RobotBuild {
+    return {
+      ...build,
+      weaponIds: [...build.weaponIds],
+    };
   }
 
   private createButton(
@@ -173,6 +372,10 @@ export class GarageScene extends Phaser.Scene {
     button.on('pointerup', onClick);
 
     return button;
+  }
+
+  private setStatus(message: string): void {
+    this.statusText?.setText(message);
   }
 
   private drawGarageBackdrop(): void {
