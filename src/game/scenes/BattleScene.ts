@@ -111,12 +111,12 @@ export class BattleScene extends Phaser.Scene {
 
     this.playerNameText = this.add.text(
       ARENA.x + 12,
-      24,
-      `Player: ${this.playerSave.name} | Armor: ${this.robotStats.armor} | Damage: x${this.robotStats.damageMultiplier.toFixed(2)}`,
+      50,
+      `Pilot: ${this.playerSave.name} | ARM ${this.robotStats.armor} | DMG x${this.robotStats.damageMultiplier.toFixed(2)}`,
       {
         color: '#8effb6',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '18px',
+        fontSize: '16px',
         fontStyle: 'bold',
       },
     );
