@@ -185,12 +185,17 @@ export class PlayerService {
   }
 
   private loadState(): PlayerStorageState {
-    return this.normalizeState(
-      this.storage.load<PlayerStorageState>(
-        PLAYER_STORAGE_KEY,
-        this.createEmptyState(),
-      ),
+    const loadedState = this.storage.load<PlayerStorageState>(
+      PLAYER_STORAGE_KEY,
+      this.createEmptyState(),
     );
+    const normalizedState = this.normalizeState(loadedState);
+
+    if (!this.areStatesEqual(loadedState, normalizedState)) {
+      this.storage.save(PLAYER_STORAGE_KEY, normalizedState);
+    }
+
+    return normalizedState;
   }
 
   private saveState(state: PlayerStorageState): void {
@@ -333,6 +338,10 @@ export class PlayerService {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
+  }
+
+  private areStatesEqual(a: unknown, b: PlayerStorageState): boolean {
+    return JSON.stringify(a) === JSON.stringify(b);
   }
 }
 

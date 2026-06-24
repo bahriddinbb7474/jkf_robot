@@ -11,6 +11,7 @@ export class LocalStorageService implements StorageService {
     try {
       return JSON.parse(rawValue) as T;
     } catch {
+      this.save(key, fallback);
       return fallback;
     }
   }
