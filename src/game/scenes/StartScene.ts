@@ -1,41 +1,97 @@
 import Phaser from 'phaser';
+import { playerService } from '../services/PlayerService';
+import type { PlayerProfile } from '../types/PlayerSave';
 
 export class StartScene extends Phaser.Scene {
+  private selectedPlayerId: string | null = null;
+  private nameBuffer = '';
+  private nameInputText?: Phaser.GameObjects.Text;
+  private playerListContainer?: Phaser.GameObjects.Container;
+  private startButton?: Phaser.GameObjects.Text;
+  private statusText?: Phaser.GameObjects.Text;
+  private readonly keyDownHandler = (event: KeyboardEvent): void => {
+    this.handleNameInput(event);
+  };
+
   constructor() {
     super('StartScene');
   }
 
   create(): void {
     const centerX = this.scale.width / 2;
-    const centerY = this.scale.height / 2;
 
     this.add
-      .text(centerX, centerY - 70, 'JKF_robot', {
+      .text(centerX, 54, 'JKF_robot', {
         color: '#57d4ff',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '64px',
+        fontSize: '48px',
         fontStyle: 'bold',
       })
       .setOrigin(0.5);
 
     this.add
-      .text(centerX, centerY + 15, 'MVP Foundation Ready', {
+      .text(centerX, 100, 'Stage 4 - Players and Save', {
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '28px',
+        fontSize: '24px',
       })
       .setOrigin(0.5);
 
-    this.add
-      .text(centerX, centerY + 70, 'Stage 1-A', {
-        color: '#91a4bd',
+    this.createPlayerPanel();
+    this.refreshPlayers();
+
+    this.input.keyboard?.on('keydown', this.keyDownHandler);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard?.off('keydown', this.keyDownHandler);
+    });
+  }
+
+  private createPlayerPanel(): void {
+    this.add.text(90, 144, 'Create player', {
+      color: '#d8e4ed',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '24px',
+      fontStyle: 'bold',
+    });
+
+    this.nameInputText = this.add.text(90, 184, '', {
+      backgroundColor: '#101820',
+      color: '#f4f7fb',
+      fixedWidth: 360,
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '22px',
+      padding: { x: 14, y: 10 },
+    });
+
+    const createButton = this.add
+      .text(470, 184, 'Create', {
+        backgroundColor: '#143652',
+        color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '20px',
+        fontSize: '22px',
+        padding: { x: 18, y: 10 },
       })
-      .setOrigin(0.5);
+      .setInteractive({ useHandCursor: true });
 
-    const startButton = this.add
-      .text(centerX, centerY + 135, 'Start Battle Prototype', {
+    createButton.on('pointerover', () =>
+      createButton.setBackgroundColor('#1d547d'),
+    );
+    createButton.on('pointerout', () =>
+      createButton.setBackgroundColor('#143652'),
+    );
+    createButton.on('pointerup', () => this.createPlayer());
+
+    this.add.text(90, 258, 'Players', {
+      color: '#d8e4ed',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '24px',
+      fontStyle: 'bold',
+    });
+
+    this.playerListContainer = this.add.container(90, 300);
+
+    this.startButton = this.add
+      .text(760, 470, 'Start Battle', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -45,17 +101,155 @@ export class StartScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-    const startBattle = (): void => {
-      this.scene.start('BattleScene');
-    };
+    this.startButton.on('pointerover', () =>
+      this.startButton?.setBackgroundColor(
+        this.selectedPlayerId ? '#1d547d' : '#2a3440',
+      ),
+    );
+    this.startButton.on('pointerout', () => this.updateStartButtonState());
+    this.startButton.on('pointerup', () => this.startBattle());
 
-    startButton.on('pointerover', () =>
-      startButton.setBackgroundColor('#1d547d'),
+    this.statusText = this.add
+      .text(90, 462, '', {
+        color: '#91a4bd',
+        fixedWidth: 560,
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '18px',
+      })
+      .setOrigin(0, 0.5);
+
+    this.updateNameInputText();
+    this.updateStartButtonState();
+  }
+
+  private refreshPlayers(): void {
+    const players = playerService.listPlayers();
+    const currentPlayerId = playerService.getCurrentPlayerId();
+
+    this.selectedPlayerId =
+      currentPlayerId !== null &&
+      players.some((player) => player.id === currentPlayerId)
+        ? currentPlayerId
+        : (players[0]?.id ?? null);
+
+    this.renderPlayerList(players);
+    this.updateStartButtonState();
+  }
+
+  private renderPlayerList(players: PlayerProfile[]): void {
+    this.playerListContainer?.removeAll(true);
+
+    if (!this.playerListContainer) {
+      return;
+    }
+
+    if (players.length === 0) {
+      this.playerListContainer.add(
+        this.add.text(0, 0, 'No players yet. Type a name and create one.', {
+          color: '#91a4bd',
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '18px',
+        }),
+      );
+      return;
+    }
+
+    players.forEach((player, index) => {
+      const selected = player.id === this.selectedPlayerId;
+      const row = this.add
+        .text(
+          0,
+          index * 42,
+          `${selected ? '> ' : '  '}${player.name}  W:${player.wins} L:${player.losses}`,
+          {
+            backgroundColor: selected ? '#1d547d' : '#101820',
+            color: selected ? '#ffffff' : '#c8d3df',
+            fixedWidth: 520,
+            fontFamily: 'system-ui, sans-serif',
+            fontSize: '20px',
+            padding: { x: 12, y: 8 },
+          },
+        )
+        .setInteractive({ useHandCursor: true });
+
+      row.on('pointerup', () => {
+        playerService.setCurrentPlayer(player.id);
+        this.selectedPlayerId = player.id;
+        this.setStatus(`Selected ${player.name}.`);
+        this.refreshPlayers();
+      });
+
+      this.playerListContainer?.add(row);
+    });
+  }
+
+  private handleNameInput(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      if (this.nameBuffer.length > 0) {
+        this.createPlayer();
+      } else {
+        this.startBattle();
+      }
+      return;
+    }
+
+    if (event.key === 'Backspace') {
+      this.nameBuffer = this.nameBuffer.slice(0, -1);
+      this.updateNameInputText();
+      return;
+    }
+
+    if (event.key.length !== 1 || this.nameBuffer.length >= 18) {
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9 _-]$/.test(event.key)) {
+      return;
+    }
+
+    this.nameBuffer += event.key;
+    this.updateNameInputText();
+  }
+
+  private createPlayer(): void {
+    try {
+      const player = playerService.createPlayer(this.nameBuffer);
+      this.selectedPlayerId = player.id;
+      this.nameBuffer = '';
+      this.updateNameInputText();
+      this.setStatus(`Created ${player.name}.`);
+      this.refreshPlayers();
+    } catch (error) {
+      this.setStatus(error instanceof Error ? error.message : 'Create failed.');
+    }
+  }
+
+  private startBattle(): void {
+    if (this.selectedPlayerId === null) {
+      this.setStatus('Create or select a player first.');
+      return;
+    }
+
+    this.scene.start('BattleScene', { playerId: this.selectedPlayerId });
+  }
+
+  private updateNameInputText(): void {
+    const label =
+      this.nameBuffer.length > 0 ? this.nameBuffer : 'Type player name...';
+    this.nameInputText?.setText(label);
+    this.nameInputText?.setColor(
+      this.nameBuffer.length > 0 ? '#f4f7fb' : '#6f8498',
     );
-    startButton.on('pointerout', () =>
-      startButton.setBackgroundColor('#143652'),
+  }
+
+  private updateStartButtonState(): void {
+    this.startButton?.setBackgroundColor(
+      this.selectedPlayerId ? '#143652' : '#2a3440',
     );
-    startButton.on('pointerup', startBattle);
-    this.input.keyboard?.once('keydown-ENTER', startBattle);
+    this.startButton?.setColor(this.selectedPlayerId ? '#f4f7fb' : '#91a4bd');
+  }
+
+  private setStatus(message: string): void {
+    this.statusText?.setText(message);
   }
 }
