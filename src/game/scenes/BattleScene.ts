@@ -6,16 +6,15 @@ import type { ExplosionEvent } from '../entities/Projectile';
 import { CombatSystem } from '../systems/CombatSystem';
 import { EnemyAISystem } from '../systems/EnemyAISystem';
 import { MovementSystem, type MovementKeys } from '../systems/MovementSystem';
+import { StatsSystem } from '../systems/StatsSystem';
 import { WeaponSystem, type MeleeAttackEvent } from '../systems/WeaponSystem';
 import { playerService } from '../services/PlayerService';
 import type { Enemy } from '../types/Enemy';
 import type { PlayerSave } from '../types/PlayerSave';
+import type { RobotStats } from '../types/RobotStats';
 
 const ARENA = new Phaser.Geom.Rectangle(40, 70, 880, 430);
 const GRID_SIZE = 40;
-const BATTLE_CONFIG = {
-  playerMaxHealth: 100,
-} as const;
 const ENEMY_CONFIGS = enemiesData as Enemy[];
 const WAVE_TRANSITION_DELAY_MS = 750;
 const ENEMY_SPAWN_POSITIONS = [
@@ -63,6 +62,7 @@ export class BattleScene extends Phaser.Scene {
   private battleState: BattleState = 'active';
   private playerId: string | null = null;
   private playerSave: PlayerSave | null = null;
+  private robotStats?: RobotStats;
   private battleResultSaved = false;
 
   constructor() {
@@ -83,6 +83,7 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
+    this.robotStats = StatsSystem.calculate(this.playerSave.currentBuild);
     this.battleState = 'active';
     this.battleResultSaved = false;
     this.currentWaveIndex = 0;
@@ -111,7 +112,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerNameText = this.add.text(
       ARENA.x + 12,
       24,
-      `Player: ${this.playerSave.name}`,
+      `Player: ${this.playerSave.name} | Armor: ${this.robotStats.armor} | Damage: x${this.robotStats.damageMultiplier.toFixed(2)}`,
       {
         color: '#8effb6',
         fontFamily: 'system-ui, sans-serif',
@@ -135,12 +136,14 @@ export class BattleScene extends Phaser.Scene {
       this,
       ARENA.centerX,
       ARENA.centerY,
-      BATTLE_CONFIG.playerMaxHealth,
+      this.robotStats.maxHp,
+      this.robotStats.color,
     );
     this.movementSystem = new MovementSystem(
       this.playerRobot,
       this.createMovementKeys(),
       ARENA,
+      this.robotStats.speed,
     );
 
     this.spawnWave(this.currentWaveIndex);
@@ -156,6 +159,10 @@ export class BattleScene extends Phaser.Scene {
       ARENA,
       (explosion) => this.showExplosion(explosion),
       (attack) => this.showSwordAttack(attack),
+      {
+        availableWeaponIds: this.robotStats.weaponIds,
+        damageMultiplier: this.robotStats.damageMultiplier,
+      },
     );
     this.combatSystem = new CombatSystem(
       this.enemies,
@@ -163,6 +170,7 @@ export class BattleScene extends Phaser.Scene {
       (enemy) => this.handleEnemyDestroyed(enemy),
       () => this.updateHealthText(),
       () => this.endBattle('defeat'),
+      this.robotStats.armor,
     );
 
     this.healthText = this.add

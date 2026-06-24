@@ -12,6 +12,11 @@ const WEAPONS = weaponsData as Weapon[];
 const DEFAULT_WEAPON_ID = 'laser_basic';
 const MUZZLE_OFFSET = 38;
 
+export interface WeaponSystemOptions {
+  availableWeaponIds?: string[];
+  damageMultiplier?: number;
+}
+
 export interface MeleeAttackEvent {
   x: number;
   y: number;
@@ -27,10 +32,9 @@ export class WeaponSystem {
   private pendingMeleeAttacks: MeleeAttackEvent[] = [];
   private nextShotAt = 0;
   private wasPointerDown = false;
-  private activeWeaponId = DEFAULT_WEAPON_ID;
-  private readonly weaponsById = new Map(
-    WEAPONS.map((weapon) => [weapon.id, weapon]),
-  );
+  private activeWeaponId: string;
+  private readonly weaponsById: Map<string, Weapon>;
+  private readonly damageMultiplier: number;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -38,7 +42,26 @@ export class WeaponSystem {
     private readonly arenaBounds: Phaser.Geom.Rectangle,
     private readonly onExplosionCreated?: (explosion: ExplosionEvent) => void,
     private readonly onMeleeAttackCreated?: (attack: MeleeAttackEvent) => void,
-  ) {}
+    options: WeaponSystemOptions = {},
+  ) {
+    const availableWeaponIds =
+      options.availableWeaponIds ?? WEAPONS.map((weapon) => weapon.id);
+    const allowedWeapons = WEAPONS.filter((weapon) =>
+      availableWeaponIds.includes(weapon.id),
+    );
+    const fallbackWeapons =
+      allowedWeapons.length > 0
+        ? allowedWeapons
+        : [this.getStaticDefaultWeapon()];
+
+    this.weaponsById = new Map(
+      fallbackWeapons.map((weapon) => [weapon.id, weapon]),
+    );
+    this.activeWeaponId = this.weaponsById.has(DEFAULT_WEAPON_ID)
+      ? DEFAULT_WEAPON_ID
+      : fallbackWeapons[0].id;
+    this.damageMultiplier = options.damageMultiplier ?? 1;
+  }
 
   update(
     time: number,
@@ -115,7 +138,7 @@ export class WeaponSystem {
         angle: this.owner.getAimAngle(),
         range: weapon.range,
         arcDegrees: weapon.arcDegrees,
-        damage: weapon.damage,
+        damage: this.getEffectiveDamage(weapon.damage),
       };
 
       this.pendingMeleeAttacks.push(attack);
@@ -136,7 +159,7 @@ export class WeaponSystem {
     direction.normalize();
     const projectileConfig: ProjectileConfig = {
       weaponType: weapon.type,
-      damage: weapon.damage,
+      damage: this.getEffectiveDamage(weapon.damage),
       speed: weapon.projectileSpeed,
       range: weapon.range,
       explosionRadius:
@@ -179,5 +202,21 @@ export class WeaponSystem {
     }
 
     return weapon;
+  }
+
+  private getEffectiveDamage(baseDamage: number): number {
+    return Math.max(1, Math.round(baseDamage * this.damageMultiplier));
+  }
+
+  private getStaticDefaultWeapon(): Weapon {
+    const defaultWeapon = WEAPONS.find(
+      (weapon) => weapon.id === DEFAULT_WEAPON_ID,
+    );
+
+    if (!defaultWeapon) {
+      throw new Error(`Missing default weapon: ${DEFAULT_WEAPON_ID}`);
+    }
+
+    return defaultWeapon;
   }
 }

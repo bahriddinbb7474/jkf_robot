@@ -14,6 +14,7 @@ export class CombatSystem {
     private readonly onEnemyDestroyed: (enemy: EnemyBot) => void,
     private readonly onPlayerHealthChanged: () => void,
     private readonly onPlayerDestroyed: () => void,
+    private readonly playerArmor = 0,
   ) {}
 
   update(
@@ -173,7 +174,7 @@ export class CombatSystem {
   }
 
   private damagePlayer(damage: number): boolean {
-    this.player.takeDamage(damage);
+    this.player.takeDamage(this.applyArmor(damage));
     this.onPlayerHealthChanged();
 
     if (this.player.health <= 0) {
@@ -182,6 +183,10 @@ export class CombatSystem {
     }
 
     return false;
+  }
+
+  private applyArmor(damage: number): number {
+    return Math.max(1, damage - this.playerArmor);
   }
 
   private getActiveEnemies(): EnemyBot[] {

@@ -12,11 +12,12 @@ export class PlayerRobot extends Phaser.GameObjects.Container {
     x: number,
     y: number,
     readonly maxHealth: number,
+    color = 0x32b8d9,
   ) {
     super(scene, x, y);
     this.currentHealth = maxHealth;
 
-    const body = scene.add.rectangle(0, 0, ROBOT_SIZE, ROBOT_SIZE, 0x32b8d9);
+    const body = scene.add.rectangle(0, 0, ROBOT_SIZE, ROBOT_SIZE, color);
     body.setStrokeStyle(3, 0xbcefff);
 
     this.aimIndicator = scene.add.container(0, 0);
