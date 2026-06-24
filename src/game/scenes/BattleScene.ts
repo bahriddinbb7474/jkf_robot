@@ -7,7 +7,9 @@ import { CombatSystem } from '../systems/CombatSystem';
 import { EnemyAISystem } from '../systems/EnemyAISystem';
 import { MovementSystem, type MovementKeys } from '../systems/MovementSystem';
 import { WeaponSystem, type MeleeAttackEvent } from '../systems/WeaponSystem';
+import { playerService } from '../services/PlayerService';
 import type { Enemy } from '../types/Enemy';
+import type { PlayerSave } from '../types/PlayerSave';
 
 const ARENA = new Phaser.Geom.Rectangle(40, 70, 880, 430);
 const GRID_SIZE = 40;
@@ -35,6 +37,9 @@ const BOSS_SPAWN_POSITION = {
 type BattleState = 'active' | 'waveTransition' | 'victory' | 'defeat';
 type BattleResult = Extract<BattleState, 'victory' | 'defeat'>;
 type WeaponSlot = 'laser_basic' | 'rocket_basic' | 'sword_basic';
+type BattleSceneData = {
+  playerId?: string;
+};
 
 export class BattleScene extends Phaser.Scene {
   private movementSystem?: MovementSystem;
@@ -49,19 +54,37 @@ export class BattleScene extends Phaser.Scene {
   private enemyCountText?: Phaser.GameObjects.Text;
   private bossHealthText?: Phaser.GameObjects.Text;
   private waveTransitionText?: Phaser.GameObjects.Text;
+  private playerNameText?: Phaser.GameObjects.Text;
   private restartKey?: Phaser.Input.Keyboard.Key;
   private weaponSlotKeys?: Record<WeaponSlot, Phaser.Input.Keyboard.Key>;
   private currentWaveIndex = 0;
   private boss?: EnemyBot;
   private bossPhase = false;
   private battleState: BattleState = 'active';
+  private playerId: string | null = null;
+  private playerSave: PlayerSave | null = null;
+  private battleResultSaved = false;
 
   constructor() {
     super('BattleScene');
   }
 
+  init(data: BattleSceneData): void {
+    this.playerId = data.playerId ?? null;
+  }
+
   create(): void {
+    this.playerSave = this.playerId
+      ? playerService.loadPlayer(this.playerId)
+      : null;
+
+    if (!this.playerSave) {
+      this.scene.start('StartScene');
+      return;
+    }
+
     this.battleState = 'active';
+    this.battleResultSaved = false;
     this.currentWaveIndex = 0;
     this.boss = undefined;
     this.bossPhase = false;
@@ -72,6 +95,7 @@ export class BattleScene extends Phaser.Scene {
     this.enemyCountText = undefined;
     this.bossHealthText = undefined;
     this.waveTransitionText = undefined;
+    this.playerNameText = undefined;
     this.cameras.main.setBackgroundColor('#101820');
     this.drawArena();
 
@@ -83,6 +107,18 @@ export class BattleScene extends Phaser.Scene {
         fontStyle: 'bold',
       })
       .setOrigin(0.5);
+
+    this.playerNameText = this.add.text(
+      ARENA.x + 12,
+      24,
+      `Player: ${this.playerSave.name}`,
+      {
+        color: '#8effb6',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '18px',
+        fontStyle: 'bold',
+      },
+    );
 
     this.add.text(
       ARENA.x + 12,
@@ -197,7 +233,7 @@ export class BattleScene extends Phaser.Scene {
   update(time: number, delta: number): void {
     if (this.battleState !== 'active') {
       if (this.restartKey && Phaser.Input.Keyboard.JustDown(this.restartKey)) {
-        this.scene.restart();
+        this.scene.restart({ playerId: this.playerId });
       }
 
       return;
@@ -276,6 +312,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.battleState = result;
+    this.saveBattleResult(result);
 
     this.clearCombatProjectiles();
 
@@ -296,6 +333,15 @@ export class BattleScene extends Phaser.Scene {
         padding: { x: 18, y: 12 },
       })
       .setOrigin(0.5);
+  }
+
+  private saveBattleResult(result: BattleResult): void {
+    if (!this.playerId || this.battleResultSaved) {
+      return;
+    }
+
+    playerService.recordBattleResult(this.playerId, result);
+    this.battleResultSaved = true;
   }
 
   private updateWeaponSelection(): void {
