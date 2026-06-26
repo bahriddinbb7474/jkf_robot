@@ -1,7 +1,187 @@
 import Phaser from 'phaser';
+import partsData from '../../../data/static/parts.json';
+import { playerService } from '../services/PlayerService';
+import type { Part } from '../types/Part';
+import type { PlayerSave } from '../types/PlayerSave';
+
+type ShopSceneData = {
+  playerId?: string;
+};
+
+const parts = partsData as Part[];
+
+const STATUS_LABELS = {
+  owned: 'OWNED',
+  available: 'AVAILABLE',
+  locked: 'LOCKED',
+  'not-enough-money': 'NO MONEY',
+  'missing-player': 'NO PLAYER',
+  'missing-part': 'MISSING',
+} as const;
 
 export class ShopScene extends Phaser.Scene {
+  private playerId: string | null = null;
+  private playerSave: PlayerSave | null = null;
+  private partsContainer?: Phaser.GameObjects.Container;
+  private statusText?: Phaser.GameObjects.Text;
+
   constructor() {
     super('ShopScene');
+  }
+
+  init(data: ShopSceneData): void {
+    this.playerId = data.playerId ?? null;
+  }
+
+  create(): void {
+    this.playerSave = this.playerId
+      ? playerService.loadPlayer(this.playerId)
+      : null;
+
+    if (!this.playerSave) {
+      this.scene.start('StartScene');
+      return;
+    }
+
+    this.cameras.main.setBackgroundColor('#08111f');
+    this.drawShopBackdrop();
+
+    this.add
+      .text(this.scale.width / 2, 34, 'Shop', {
+        color: '#d8e4ed',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '34px',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5);
+
+    this.add.text(56, 76, `Pilot: ${this.playerSave.name}`, {
+      color: '#8effb6',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '20px',
+      fontStyle: 'bold',
+    });
+
+    this.add.text(56, 106, `Money: ${this.playerSave.money}`, {
+      color: '#f4d35e',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '18px',
+    });
+
+    this.partsContainer = this.add.container(56, 150);
+    this.statusText = this.add
+      .text(270, 486, 'Select available parts to buy in the next step.', {
+        color: '#91a4bd',
+        fixedWidth: 420,
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '16px',
+      })
+      .setOrigin(0, 0.5);
+
+    this.createButton(82, 484, 'Back', () => this.scene.start('StartScene'));
+    this.createButton(710, 484, 'Garage', () =>
+      this.scene.start('GarageScene', { playerId: this.playerId }),
+    );
+
+    this.renderParts();
+  }
+
+  private renderParts(): void {
+    if (!this.partsContainer || !this.playerSave || !this.playerId) {
+      return;
+    }
+
+    this.partsContainer.removeAll(true);
+    this.partsContainer.add(
+      this.add.text(0, 0, 'Parts catalog', {
+        color: '#d8e4ed',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '23px',
+        fontStyle: 'bold',
+      }),
+    );
+
+    parts.forEach((part, index) => {
+      const rowY = 38 + index * 34;
+      const status = playerService.getPartPurchaseStatus(
+        this.playerId ?? '',
+        part.id,
+      );
+      const row = this.add.text(0, rowY, this.formatPartRow(part, status), {
+        backgroundColor: status === 'available' ? '#143652' : '#101820',
+        color: this.getStatusColor(status),
+        fixedWidth: 820,
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '16px',
+        padding: { x: 10, y: 6 },
+      });
+
+      this.partsContainer?.add(row);
+    });
+  }
+
+  private formatPartRow(
+    part: Part,
+    status: ReturnType<typeof playerService.getPartPurchaseStatus>,
+  ): string {
+    const priceLabel = part.price === 0 ? 'free' : `${part.price} cr`;
+    return `${part.name} | ${part.slot} | ${priceLabel} | ${STATUS_LABELS[status]}`;
+  }
+
+  private getStatusColor(
+    status: ReturnType<typeof playerService.getPartPurchaseStatus>,
+  ): string {
+    switch (status) {
+      case 'owned':
+        return '#8effb6';
+      case 'available':
+        return '#f4f7fb';
+      case 'locked':
+        return '#f08a8a';
+      case 'not-enough-money':
+        return '#f4d35e';
+      default:
+        return '#91a4bd';
+    }
+  }
+
+  private createButton(
+    x: number,
+    y: number,
+    label: string,
+    onClick: () => void,
+  ): Phaser.GameObjects.Text {
+    const button = this.add
+      .text(x, y, label, {
+        backgroundColor: '#143652',
+        color: '#f4f7fb',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '20px',
+        padding: { x: 18, y: 10 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    button.on('pointerover', () => button.setBackgroundColor('#1d547d'));
+    button.on('pointerout', () => button.setBackgroundColor('#143652'));
+    button.on('pointerup', onClick);
+
+    return button;
+  }
+
+  private drawShopBackdrop(): void {
+    const graphics = this.add.graphics();
+
+    graphics.fillStyle(0x0b1524, 1);
+    graphics.fillRect(0, 0, this.scale.width, this.scale.height);
+    graphics.fillStyle(0x102235, 1);
+    graphics.fillRect(30, 70, 900, 420);
+    graphics.lineStyle(2, 0x2a4b68, 0.9);
+    graphics.strokeRect(30, 70, 900, 420);
+    graphics.lineStyle(1, 0x1d547d, 0.55);
+
+    for (let y = 118; y < 490; y += 46) {
+      graphics.lineBetween(30, y, 930, y);
+    }
   }
 }

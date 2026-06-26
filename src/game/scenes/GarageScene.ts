@@ -76,17 +76,20 @@ export class GarageScene extends Phaser.Scene {
     this.statsContainer = this.add.container(0, 0);
 
     this.statusText = this.add
-      .text(250, 486, '', {
+      .text(210, 486, '', {
         color: '#91a4bd',
-        fixedWidth: 390,
+        fixedWidth: 330,
         fontFamily: 'system-ui, sans-serif',
         fontSize: '16px',
       })
       .setOrigin(0, 0.5);
 
     this.createButton(82, 484, 'Back', () => this.scene.start('StartScene'));
-    this.createButton(700, 484, 'Save Build', () => this.saveBuild());
-    this.createButton(842, 484, 'Start Battle', () =>
+    this.createButton(600, 484, 'Shop', () =>
+      this.scene.start('ShopScene', { playerId: this.playerId }),
+    );
+    this.createButton(730, 484, 'Save Build', () => this.saveBuild());
+    this.createButton(870, 484, 'Start Battle', () =>
       this.scene.start('BattleScene', { playerId: this.playerId }),
     );
 

@@ -9,6 +9,7 @@ export class StartScene extends Phaser.Scene {
   private playerListContainer?: Phaser.GameObjects.Container;
   private startButton?: Phaser.GameObjects.Text;
   private garageButton?: Phaser.GameObjects.Text;
+  private shopButton?: Phaser.GameObjects.Text;
   private statusText?: Phaser.GameObjects.Text;
   private readonly keyDownHandler = (event: KeyboardEvent): void => {
     this.handleNameInput(event);
@@ -91,8 +92,27 @@ export class StartScene extends Phaser.Scene {
 
     this.playerListContainer = this.add.container(90, 300);
 
+    this.shopButton = this.add
+      .text(620, 470, 'Shop', {
+        backgroundColor: '#143652',
+        color: '#f4f7fb',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '22px',
+        padding: { x: 22, y: 12 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    this.shopButton.on('pointerover', () =>
+      this.shopButton?.setBackgroundColor(
+        this.selectedPlayerId ? '#1d547d' : '#2a3440',
+      ),
+    );
+    this.shopButton.on('pointerout', () => this.updateActionButtonState());
+    this.shopButton.on('pointerup', () => this.openShop());
+
     this.garageButton = this.add
-      .text(700, 470, 'Garage', {
+      .text(740, 470, 'Garage', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -111,7 +131,7 @@ export class StartScene extends Phaser.Scene {
     this.garageButton.on('pointerup', () => this.openGarage());
 
     this.startButton = this.add
-      .text(840, 470, 'Start Battle', {
+      .text(860, 470, 'Start Battle', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -272,6 +292,15 @@ export class StartScene extends Phaser.Scene {
     this.scene.start('GarageScene', { playerId: this.selectedPlayerId });
   }
 
+  private openShop(): void {
+    if (this.selectedPlayerId === null) {
+      this.setStatus('Create or select a player first.');
+      return;
+    }
+
+    this.scene.start('ShopScene', { playerId: this.selectedPlayerId });
+  }
+
   private updateNameInputText(): void {
     const label =
       this.nameBuffer.length > 0 ? this.nameBuffer : 'Type player name...';
@@ -290,6 +319,10 @@ export class StartScene extends Phaser.Scene {
       this.selectedPlayerId ? '#143652' : '#2a3440',
     );
     this.garageButton?.setColor(this.selectedPlayerId ? '#f4f7fb' : '#91a4bd');
+    this.shopButton?.setBackgroundColor(
+      this.selectedPlayerId ? '#143652' : '#2a3440',
+    );
+    this.shopButton?.setColor(this.selectedPlayerId ? '#f4f7fb' : '#91a4bd');
   }
 
   private setStatus(message: string): void {
