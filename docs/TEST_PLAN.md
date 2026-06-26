@@ -62,3 +62,23 @@
 12. Equip the bought part, save the build, reload the browser, and confirm the build persists.
 13. Create or select a second player and confirm shop purchases and garage builds do not mix between players.
 14. Start battle from Garage and confirm the saved build still affects HP/speed/armor/damage/color/weapons.
+
+## Stage 7
+
+1. Run `npm.cmd run format`.
+2. Run `npm.cmd run build`.
+3. Run `npm.cmd run lint`.
+4. Run the game locally.
+5. Select or create a player and open Missions.
+6. Confirm mission 1 is unlocked and missions 2/3 are locked for a new player.
+7. Start mission 1 and confirm BattleScene shows the selected mission name.
+8. Win mission 1, click Continue, and confirm RewardScene shows money earned.
+9. Return to Missions and confirm mission 1 is completed and mission 2 is unlocked.
+10. Confirm repeating a completed mission does not grant the mission reward again.
+11. Lose any unlocked mission and confirm losses increment, no reward is granted, and bought parts/build are preserved.
+12. Complete mission 2 and confirm mission 3 unlocks and `armor_bastion` becomes available in Shop.
+13. Open Shop and confirm mission-unlocked parts follow the normal purchase rules.
+14. Open Garage and confirm bought parts can still be equipped and saved.
+15. Start mission 3 and confirm mission waves, boss, victory/defeat, weapons 1/2/3, and R retry still work.
+16. Create or select a second player and confirm mission completions, money, unlocks, purchases, and builds do not mix.
+17. Reload the browser and confirm mission progress persists.

@@ -114,3 +114,14 @@
 - Successful purchases subtract money once, add the part to `ownedPartIds`, and persist immediately.
 - Garage inventory continues to be derived from `ownedPartIds`, so bought parts appear in Garage without a separate inventory schema or migration.
 - Weapon purchases remain deferred; all three current weapons still come from `currentBuild.weaponIds`.
+
+## Stage 7
+
+- Stage 7 uses `data/static/missions.json` as the source of truth for mission order, rewards, waves, optional boss, and part unlocks.
+- The existing save schema is retained: mission progress uses `completedMissionIds`, and part unlocks use `unlockedPartIds`.
+- Mission status is derived from player progress: completed missions are completed, missions with unmet prerequisites are locked, and all others are unlocked.
+- BattleScene receives `playerId` and `missionId`; it keeps the existing combat systems and swaps only the wave/boss source to mission config.
+- Victory increments wins and completes the mission through `PlayerService`; defeat increments losses and grants no reward or unlocks.
+- Mission rewards are idempotent: replaying an already completed mission can record a win but does not grant mission money or unlocks again.
+- Mission unlocks do not grant ownership. Unlocked paid parts become purchasable in Shop and still require money.
+- RewardScene is a simple post-battle navigation screen for Missions, Garage, Shop, and Retry.
