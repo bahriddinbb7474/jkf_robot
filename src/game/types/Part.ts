@@ -5,6 +5,7 @@ export interface Part {
   name: string;
   slot: PartSlot;
   price: number;
+  locked?: boolean;
   maxHpBonus?: number;
   armorBonus?: number;
   speedBonus?: number;

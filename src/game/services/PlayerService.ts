@@ -17,6 +17,7 @@ const STARTING_WEAPON_IDS = ['laser_basic', 'rocket_basic', 'sword_basic'];
 
 type StaticPart = {
   id: string;
+  locked?: boolean;
   price: number;
   slot: string;
 };
@@ -27,6 +28,24 @@ type BalanceConfig = {
 
 const balance = balanceData as BalanceConfig;
 const parts = partsData as StaticPart[];
+
+export type PartPurchaseStatus =
+  | 'owned'
+  | 'available'
+  | 'locked'
+  | 'not-enough-money'
+  | 'missing-player'
+  | 'missing-part';
+
+export type PurchasePartResult =
+  | {
+      status: 'purchased';
+      player: PlayerSave;
+    }
+  | {
+      status: Exclude<PartPurchaseStatus, 'available'>;
+      player: PlayerSave | null;
+    };
 
 export class PlayerService {
   constructor(private readonly storage: StorageService) {}
@@ -185,6 +204,65 @@ export class PlayerService {
     });
   }
 
+  getPartPurchaseStatus(playerId: string, partId: string): PartPurchaseStatus {
+    const player = this.loadPlayer(playerId);
+
+    if (player === null) {
+      return 'missing-player';
+    }
+
+    const part = this.getPartById(partId);
+
+    if (part === null) {
+      return 'missing-part';
+    }
+
+    return this.getPartPurchaseStatusForPlayer(player, part);
+  }
+
+  purchasePart(playerId: string, partId: string): PurchasePartResult {
+    const player = this.loadPlayer(playerId);
+
+    if (player === null) {
+      return {
+        status: 'missing-player',
+        player: null,
+      };
+    }
+
+    const part = this.getPartById(partId);
+
+    if (part === null) {
+      return {
+        status: 'missing-part',
+        player,
+      };
+    }
+
+    const status = this.getPartPurchaseStatusForPlayer(player, part);
+
+    if (status !== 'available') {
+      return {
+        status,
+        player,
+      };
+    }
+
+    const updatedPlayer = {
+      ...player,
+      money: player.money - part.price,
+      ownedPartIds: this.mergeUniqueIds(player.ownedPartIds, [part.id]),
+      unlockedPartIds: this.mergeUniqueIds(player.unlockedPartIds, [part.id]),
+    };
+
+    this.savePlayer(updatedPlayer);
+
+    return {
+      status: 'purchased',
+      player: this.loadPlayer(playerId) ?? updatedPlayer,
+    };
+  }
+
   private loadState(): PlayerStorageState {
     const loadedState = this.storage.load<PlayerStorageState>(
       PLAYER_STORAGE_KEY,
@@ -328,6 +406,33 @@ export class PlayerService {
     }
 
     return part.id;
+  }
+
+  private getPartById(partId: string): StaticPart | null {
+    return parts.find((part) => part.id === partId) ?? null;
+  }
+
+  private getPartPurchaseStatusForPlayer(
+    player: PlayerSave,
+    part: StaticPart,
+  ): PartPurchaseStatus {
+    if (player.ownedPartIds.includes(part.id)) {
+      return 'owned';
+    }
+
+    if (!this.isPartUnlocked(player, part)) {
+      return 'locked';
+    }
+
+    if (player.money < part.price) {
+      return 'not-enough-money';
+    }
+
+    return 'available';
+  }
+
+  private isPartUnlocked(player: PlayerSave, part: StaticPart): boolean {
+    return !part.locked || player.unlockedPartIds.includes(part.id);
   }
 
   private createDefaultQuestionStats(): QuestionStats {

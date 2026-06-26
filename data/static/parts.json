@@ -11,7 +11,7 @@
     "id": "body_guard",
     "name": "Guard Body",
     "slot": "body",
-    "price": 0,
+    "price": 80,
     "maxHpBonus": 25,
     "speedBonus": -8,
     "damageMultiplierBonus": 0
@@ -27,7 +27,7 @@
     "id": "head_targeting",
     "name": "Targeting Head",
     "slot": "head",
-    "price": 0,
+    "price": 60,
     "damageMultiplierBonus": 0.1
   },
   {
@@ -41,7 +41,7 @@
     "id": "legs_sprint",
     "name": "Sprint Legs",
     "slot": "legs",
-    "price": 0,
+    "price": 70,
     "speedBonus": 35,
     "armorBonus": -1
   },
@@ -56,9 +56,19 @@
     "id": "armor_plated",
     "name": "Plated Armor",
     "slot": "armor",
-    "price": 0,
+    "price": 90,
     "armorBonus": 3,
     "speedBonus": -12
+  },
+  {
+    "id": "armor_bastion",
+    "name": "Bastion Armor",
+    "slot": "armor",
+    "price": 160,
+    "locked": true,
+    "maxHpBonus": 20,
+    "armorBonus": 5,
+    "speedBonus": -22
   },
   {
     "id": "color_basic",
@@ -71,14 +81,14 @@
     "id": "color_cobalt",
     "name": "Cobalt Glow",
     "slot": "color",
-    "price": 0,
+    "price": 40,
     "colorHex": "#2f6fff"
   },
   {
     "id": "color_crimson",
     "name": "Crimson Signal",
     "slot": "color",
-    "price": 0,
+    "price": 40,
     "colorHex": "#dc4f63"
   }
 ]
