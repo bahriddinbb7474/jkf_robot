@@ -23,6 +23,7 @@ export class ShopScene extends Phaser.Scene {
   private playerId: string | null = null;
   private playerSave: PlayerSave | null = null;
   private partsContainer?: Phaser.GameObjects.Container;
+  private moneyText?: Phaser.GameObjects.Text;
   private statusText?: Phaser.GameObjects.Text;
 
   constructor() {
@@ -62,7 +63,7 @@ export class ShopScene extends Phaser.Scene {
       fontStyle: 'bold',
     });
 
-    this.add.text(56, 106, `Money: ${this.playerSave.money}`, {
+    this.moneyText = this.add.text(56, 106, `Money: ${this.playerSave.money}`, {
       color: '#f4d35e',
       fontFamily: 'system-ui, sans-serif',
       fontSize: '18px',
@@ -70,7 +71,7 @@ export class ShopScene extends Phaser.Scene {
 
     this.partsContainer = this.add.container(56, 150);
     this.statusText = this.add
-      .text(270, 486, 'Select available parts to buy in the next step.', {
+      .text(270, 486, 'Click an available part to buy it.', {
         color: '#91a4bd',
         fixedWidth: 420,
         fontFamily: 'system-ui, sans-serif',
@@ -116,8 +117,56 @@ export class ShopScene extends Phaser.Scene {
         padding: { x: 10, y: 6 },
       });
 
+      row.setInteractive({ useHandCursor: status === 'available' });
+      row.on('pointerover', () => {
+        if (status === 'available') {
+          row.setBackgroundColor('#1d547d');
+        }
+      });
+      row.on('pointerout', () => {
+        row.setBackgroundColor(status === 'available' ? '#143652' : '#101820');
+      });
+      row.on('pointerup', () => this.purchasePart(part.id));
+
       this.partsContainer?.add(row);
     });
+  }
+
+  private purchasePart(partId: string): void {
+    if (!this.playerId) {
+      this.setStatus('Select a player before shopping.');
+      return;
+    }
+
+    const result = playerService.purchasePart(this.playerId, partId);
+
+    if (result.player) {
+      this.playerSave = result.player;
+      this.moneyText?.setText(`Money: ${this.playerSave.money}`);
+    }
+
+    switch (result.status) {
+      case 'purchased':
+        this.setStatus('Part purchased. It is now available in Garage.');
+        break;
+      case 'owned':
+        this.setStatus('That part is already owned.');
+        break;
+      case 'locked':
+        this.setStatus('That part is locked.');
+        break;
+      case 'not-enough-money':
+        this.setStatus('Not enough money.');
+        break;
+      case 'missing-part':
+        this.setStatus('Part config is missing.');
+        break;
+      case 'missing-player':
+        this.setStatus('Player save is missing.');
+        break;
+    }
+
+    this.renderParts();
   }
 
   private formatPartRow(
@@ -143,6 +192,10 @@ export class ShopScene extends Phaser.Scene {
       default:
         return '#91a4bd';
     }
+  }
+
+  private setStatus(message: string): void {
+    this.statusText?.setText(message);
   }
 
   private createButton(
