@@ -83,8 +83,14 @@ export class ShopScene extends Phaser.Scene {
       .setOrigin(0, 0.5);
 
     this.createButton(82, 496, 'Back', () => this.scene.start('StartScene'));
-    this.createButton(710, 496, 'Garage', () =>
+    this.createButton(690, 496, 'Garage', () =>
       this.scene.start('GarageScene', { playerId: this.playerId }),
+    );
+    this.createButton(830, 496, 'Missions', () =>
+      this.scene.start('MissionSelectScene', {
+        playerId: this.playerId,
+        fromScene: 'ShopScene',
+      }),
     );
 
     this.renderParts();

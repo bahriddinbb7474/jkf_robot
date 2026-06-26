@@ -7,7 +7,7 @@ export class StartScene extends Phaser.Scene {
   private nameBuffer = '';
   private nameInputText?: Phaser.GameObjects.Text;
   private playerListContainer?: Phaser.GameObjects.Container;
-  private startButton?: Phaser.GameObjects.Text;
+  private missionsButton?: Phaser.GameObjects.Text;
   private garageButton?: Phaser.GameObjects.Text;
   private shopButton?: Phaser.GameObjects.Text;
   private statusText?: Phaser.GameObjects.Text;
@@ -130,8 +130,8 @@ export class StartScene extends Phaser.Scene {
     this.garageButton.on('pointerout', () => this.updateActionButtonState());
     this.garageButton.on('pointerup', () => this.openGarage());
 
-    this.startButton = this.add
-      .text(860, 470, 'Start Battle', {
+    this.missionsButton = this.add
+      .text(860, 470, 'Missions', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -141,13 +141,13 @@ export class StartScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-    this.startButton.on('pointerover', () =>
-      this.startButton?.setBackgroundColor(
+    this.missionsButton.on('pointerover', () =>
+      this.missionsButton?.setBackgroundColor(
         this.selectedPlayerId ? '#1d547d' : '#2a3440',
       ),
     );
-    this.startButton.on('pointerout', () => this.updateActionButtonState());
-    this.startButton.on('pointerup', () => this.startBattle());
+    this.missionsButton.on('pointerout', () => this.updateActionButtonState());
+    this.missionsButton.on('pointerup', () => this.openMissions());
 
     this.statusText = this.add
       .text(90, 462, '', {
@@ -237,7 +237,7 @@ export class StartScene extends Phaser.Scene {
       if (this.nameBuffer.length > 0) {
         this.createPlayer();
       } else {
-        this.startBattle();
+        this.openMissions();
       }
       return;
     }
@@ -274,13 +274,16 @@ export class StartScene extends Phaser.Scene {
     }
   }
 
-  private startBattle(): void {
+  private openMissions(): void {
     if (this.selectedPlayerId === null) {
       this.setStatus('Create or select a player first.');
       return;
     }
 
-    this.scene.start('BattleScene', { playerId: this.selectedPlayerId });
+    this.scene.start('MissionSelectScene', {
+      playerId: this.selectedPlayerId,
+      fromScene: 'StartScene',
+    });
   }
 
   private openGarage(): void {
@@ -311,10 +314,12 @@ export class StartScene extends Phaser.Scene {
   }
 
   private updateActionButtonState(): void {
-    this.startButton?.setBackgroundColor(
+    this.missionsButton?.setBackgroundColor(
       this.selectedPlayerId ? '#143652' : '#2a3440',
     );
-    this.startButton?.setColor(this.selectedPlayerId ? '#f4f7fb' : '#91a4bd');
+    this.missionsButton?.setColor(
+      this.selectedPlayerId ? '#f4f7fb' : '#91a4bd',
+    );
     this.garageButton?.setBackgroundColor(
       this.selectedPlayerId ? '#143652' : '#2a3440',
     );

@@ -85,13 +85,16 @@ export class GarageScene extends Phaser.Scene {
       .setOrigin(0, 0.5);
 
     this.createButton(82, 484, 'Back', () => this.scene.start('StartScene'));
-    this.createButton(600, 484, 'Shop', () =>
+    this.createButton(570, 484, 'Shop', () =>
       this.scene.start('ShopScene', { playerId: this.playerId }),
     );
-    this.createButton(730, 484, 'Save Build', () => this.saveBuild());
-    this.createButton(870, 484, 'Start Battle', () =>
-      this.scene.start('BattleScene', { playerId: this.playerId }),
+    this.createButton(690, 484, 'Missions', () =>
+      this.scene.start('MissionSelectScene', {
+        playerId: this.playerId,
+        fromScene: 'GarageScene',
+      }),
     );
+    this.createButton(840, 484, 'Save Build', () => this.saveBuild());
 
     this.renderGarage();
   }
