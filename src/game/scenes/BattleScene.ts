@@ -38,6 +38,11 @@ type BattleSceneData = {
   playerId?: string;
   missionId?: string;
 };
+type BattleRewardSummary = {
+  rewardMoney: number;
+  unlockedPartIds: string[];
+  alreadyCompleted: boolean;
+};
 
 export class BattleScene extends Phaser.Scene {
   private movementSystem?: MovementSystem;
@@ -65,6 +70,11 @@ export class BattleScene extends Phaser.Scene {
   private battleResultSaved = false;
   private missionId: string = DEFAULT_MISSION_ID;
   private activeMission?: Mission;
+  private rewardSummary: BattleRewardSummary = {
+    rewardMoney: 0,
+    unlockedPartIds: [],
+    alreadyCompleted: false,
+  };
 
   constructor() {
     super('BattleScene');
@@ -102,6 +112,11 @@ export class BattleScene extends Phaser.Scene {
     this.robotStats = StatsSystem.calculate(this.playerSave.currentBuild);
     this.battleState = 'active';
     this.battleResultSaved = false;
+    this.rewardSummary = {
+      rewardMoney: 0,
+      unlockedPartIds: [],
+      alreadyCompleted: false,
+    };
     this.currentWaveIndex = 0;
     this.boss = undefined;
     this.bossPhase = false;
@@ -345,8 +360,8 @@ export class BattleScene extends Phaser.Scene {
 
     const message =
       result === 'victory'
-        ? 'Victory - boss defeated - press R to restart'
-        : 'Defeat - press R to restart';
+        ? 'Victory - press R to retry or continue'
+        : 'Defeat - press R to retry or continue';
     const color = result === 'victory' ? '#8effb6' : '#ff9ca5';
     const backgroundColor = result === 'victory' ? '#102b20' : '#35161b';
 
@@ -360,15 +375,59 @@ export class BattleScene extends Phaser.Scene {
         padding: { x: 18, y: 12 },
       })
       .setOrigin(0.5);
+
+    const continueButton = this.add
+      .text(this.scale.width / 2, ARENA.centerY + 62, 'Continue', {
+        backgroundColor: '#143652',
+        color: '#f4f7fb',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '22px',
+        padding: { x: 18, y: 10 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    continueButton.on('pointerover', () =>
+      continueButton.setBackgroundColor('#1d547d'),
+    );
+    continueButton.on('pointerout', () =>
+      continueButton.setBackgroundColor('#143652'),
+    );
+    continueButton.on('pointerup', () => this.openRewardScene(result));
   }
 
   private saveBattleResult(result: BattleResult): void {
-    if (!this.playerId || this.battleResultSaved) {
+    if (!this.playerId || !this.activeMission || this.battleResultSaved) {
       return;
     }
 
     playerService.recordBattleResult(this.playerId, result);
+
+    if (result === 'victory') {
+      const completionResult = playerService.completeMission(
+        this.playerId,
+        this.activeMission,
+      );
+
+      this.rewardSummary = {
+        rewardMoney: completionResult.rewardMoney,
+        unlockedPartIds: completionResult.unlockedPartIds,
+        alreadyCompleted: completionResult.status === 'already-completed',
+      };
+    }
+
     this.battleResultSaved = true;
+  }
+
+  private openRewardScene(result: BattleResult): void {
+    this.scene.start('RewardScene', {
+      playerId: this.playerId,
+      missionId: this.missionId,
+      result,
+      rewardMoney: this.rewardSummary.rewardMoney,
+      unlockedPartIds: this.rewardSummary.unlockedPartIds,
+      alreadyCompleted: this.rewardSummary.alreadyCompleted,
+    });
   }
 
   private updateWeaponSelection(): void {

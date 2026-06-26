@@ -3,6 +3,7 @@ import { BootScene } from '../scenes/BootScene';
 import { BattleScene } from '../scenes/BattleScene';
 import { GarageScene } from '../scenes/GarageScene';
 import { MissionSelectScene } from '../scenes/MissionSelectScene';
+import { RewardScene } from '../scenes/RewardScene';
 import { ShopScene } from '../scenes/ShopScene';
 import { StartScene } from '../scenes/StartScene';
 
@@ -23,5 +24,6 @@ export const phaserConfig: Phaser.Types.Core.GameConfig = {
     ShopScene,
     MissionSelectScene,
     BattleScene,
+    RewardScene,
   ],
 };
