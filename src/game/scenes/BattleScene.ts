@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import enemiesData from '../../../data/static/enemies.json';
+import missionsData from '../../../data/static/missions.json';
 import { EnemyBot } from '../entities/EnemyBot';
 import { PlayerRobot } from '../entities/PlayerRobot';
 import type { ExplosionEvent } from '../entities/Projectile';
@@ -10,24 +11,21 @@ import { StatsSystem } from '../systems/StatsSystem';
 import { WeaponSystem, type MeleeAttackEvent } from '../systems/WeaponSystem';
 import { playerService } from '../services/PlayerService';
 import type { Enemy } from '../types/Enemy';
+import type { Mission } from '../types/Mission';
 import type { PlayerSave } from '../types/PlayerSave';
 import type { RobotStats } from '../types/RobotStats';
 
 const ARENA = new Phaser.Geom.Rectangle(40, 70, 880, 430);
 const GRID_SIZE = 40;
 const ENEMY_CONFIGS = enemiesData as Enemy[];
+const MISSION_CONFIGS = missionsData as Mission[];
+const DEFAULT_MISSION_ID = 'mission_1';
 const WAVE_TRANSITION_DELAY_MS = 750;
 const ENEMY_SPAWN_POSITIONS = [
   { x: ARENA.right - 120, y: ARENA.top + 100 },
   { x: ARENA.right - 130, y: ARENA.bottom - 90 },
   { x: ARENA.left + 120, y: ARENA.top + 100 },
 ] as const;
-const BATTLE_PROTOTYPE_WAVES = [
-  { enemyIds: ['bot_basic', 'bot_basic'] },
-  { enemyIds: ['bot_basic', 'bot_fast', 'bot_fast'] },
-  { enemyIds: ['bot_basic', 'bot_fast', 'bot_shooter'] },
-] as const;
-const BOSS_ID = 'boss_basic';
 const BOSS_SPAWN_POSITION = {
   x: ARENA.right - 140,
   y: ARENA.centerY,
@@ -38,6 +36,7 @@ type BattleResult = Extract<BattleState, 'victory' | 'defeat'>;
 type WeaponSlot = 'laser_basic' | 'rocket_basic' | 'sword_basic';
 type BattleSceneData = {
   playerId?: string;
+  missionId?: string;
 };
 
 export class BattleScene extends Phaser.Scene {
@@ -64,6 +63,8 @@ export class BattleScene extends Phaser.Scene {
   private playerSave: PlayerSave | null = null;
   private robotStats?: RobotStats;
   private battleResultSaved = false;
+  private missionId: string = DEFAULT_MISSION_ID;
+  private activeMission?: Mission;
 
   constructor() {
     super('BattleScene');
@@ -71,6 +72,7 @@ export class BattleScene extends Phaser.Scene {
 
   init(data: BattleSceneData): void {
     this.playerId = data.playerId ?? null;
+    this.missionId = data.missionId ?? DEFAULT_MISSION_ID;
   }
 
   create(): void {
@@ -80,6 +82,20 @@ export class BattleScene extends Phaser.Scene {
 
     if (!this.playerSave) {
       this.scene.start('StartScene');
+      return;
+    }
+
+    this.activeMission = this.getMissionById(this.missionId);
+
+    if (
+      !this.activeMission ||
+      playerService.getMissionStatus(
+        this.playerSave.id,
+        this.activeMission.id,
+        this.activeMission.requiredCompletedMissionId,
+      ) === 'locked'
+    ) {
+      this.scene.start('MissionSelectScene', { playerId: this.playerId });
       return;
     }
 
@@ -101,7 +117,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawArena();
 
     this.add
-      .text(this.scale.width / 2, 30, 'Battle Prototype - Stage 3-C', {
+      .text(this.scale.width / 2, 30, `Mission: ${this.activeMission.name}`, {
         color: '#d8e4ed',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -241,7 +257,10 @@ export class BattleScene extends Phaser.Scene {
   update(time: number, delta: number): void {
     if (this.battleState !== 'active') {
       if (this.restartKey && Phaser.Input.Keyboard.JustDown(this.restartKey)) {
-        this.scene.restart({ playerId: this.playerId });
+        this.scene.restart({
+          playerId: this.playerId,
+          missionId: this.missionId,
+        });
       }
 
       return;
@@ -392,7 +411,7 @@ export class BattleScene extends Phaser.Scene {
   private updateWaveText(): void {
     const label = this.bossPhase
       ? 'Wave: Boss'
-      : `Wave: ${this.currentWaveIndex + 1} / ${BATTLE_PROTOTYPE_WAVES.length}`;
+      : `Wave: ${this.currentWaveIndex + 1} / ${this.activeMission?.waves.length ?? 1}`;
     this.waveText?.setText(label);
   }
 
@@ -416,12 +435,23 @@ export class BattleScene extends Phaser.Scene {
     if (this.enemies.every((enemy) => !enemy.active)) {
       if (this.bossPhase) {
         this.endBattle('victory');
-      } else if (this.currentWaveIndex === BATTLE_PROTOTYPE_WAVES.length - 1) {
-        this.startBossTransition();
+      } else if (
+        this.currentWaveIndex ===
+        (this.activeMission?.waves.length ?? 1) - 1
+      ) {
+        if (this.activeMission?.bossId) {
+          this.startBossTransition();
+        } else {
+          this.endBattle('victory');
+        }
       } else {
         this.startWaveTransition();
       }
     }
+  }
+
+  private getMissionById(missionId: string): Mission | undefined {
+    return MISSION_CONFIGS.find((mission) => mission.id === missionId);
   }
 
   private startWaveTransition(): void {
@@ -431,6 +461,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private startBossTransition(): void {
+    if (!this.activeMission?.bossId) {
+      this.endBattle('victory');
+      return;
+    }
+
     this.startCombatTransition('Boss incoming', () => this.spawnBoss());
   }
 
@@ -517,7 +552,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private spawnWave(waveIndex: number): void {
-    const wave = BATTLE_PROTOTYPE_WAVES[waveIndex];
+    const wave = this.activeMission?.waves[waveIndex];
 
     if (!wave) {
       throw new Error(`Missing wave definition: ${waveIndex}`);
@@ -548,10 +583,17 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private spawnBoss(): void {
-    const config = ENEMY_CONFIGS.find((enemy) => enemy.id === BOSS_ID);
+    const bossId = this.activeMission?.bossId;
+
+    if (!bossId) {
+      this.endBattle('victory');
+      return;
+    }
+
+    const config = ENEMY_CONFIGS.find((enemy) => enemy.id === bossId);
 
     if (!config || config.kind !== 'boss') {
-      throw new Error(`Missing boss config: ${BOSS_ID}`);
+      throw new Error(`Missing boss config: ${bossId}`);
     }
 
     this.boss = new EnemyBot(
@@ -583,7 +625,6 @@ export class BattleScene extends Phaser.Scene {
       right: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
   }
-
   private drawArena(): void {
     const graphics = this.add.graphics();
 
