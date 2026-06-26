@@ -103,3 +103,14 @@
 - Existing players automatically receive zero-price parts in `ownedPartIds` during save normalization, without changing the save schema.
 - Battle applies garage stats through narrow constructor/config parameters in `PlayerRobot`, `MovementSystem`, `WeaponSystem`, and `CombatSystem`.
 - Armor is flat damage reduction with a minimum of 1 incoming damage; outgoing damage is rounded after applying the damage multiplier.
+
+## Stage 6
+
+- Stage 6 keeps purchases local and save-backed: no backend, SQLite, login, real-money shop, or complex economy.
+- `PlayerService` owns purchase rules so Phaser scenes do not modify `localStorage` or player inventory directly.
+- Part purchase states are explicit: owned, available, locked, not enough money, missing player, and missing part.
+- Zero-price basic parts remain owned by default through existing save normalization; paid parts must be bought per player.
+- Locked parts are represented with `locked: true` in `data/static/parts.json` and cannot be bought unless later unlocked by explicit future logic.
+- Successful purchases subtract money once, add the part to `ownedPartIds`, and persist immediately.
+- Garage inventory continues to be derived from `ownedPartIds`, so bought parts appear in Garage without a separate inventory schema or migration.
+- Weapon purchases remain deferred; all three current weapons still come from `currentBuild.weaponIds`.

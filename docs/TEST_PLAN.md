@@ -45,3 +45,20 @@
 10. Start battle from Garage and confirm HP max, player color, armor/damage HUD text, and movement speed reflect the saved build.
 11. Confirm laser/rocket/sword weapon switching still works and battle waves/boss/victory/defeat/R restart still work.
 12. Confirm two players keep separate saved builds.
+
+## Stage 6
+
+1. Run `npm.cmd run format`.
+2. Run `npm.cmd run build`.
+3. Run `npm.cmd run lint`.
+4. Run the game locally.
+5. Select or create a player and open Shop.
+6. Confirm Shop shows player name, money, all configured parts, and owned/available/locked/no-money states.
+7. Buy an available paid part and confirm money decreases and the row changes to owned.
+8. Confirm duplicate purchase is blocked and does not subtract money again.
+9. Confirm locked parts cannot be bought.
+10. Confirm unaffordable parts cannot be bought.
+11. Open Garage and confirm the bought part appears in the owned part list.
+12. Equip the bought part, save the build, reload the browser, and confirm the build persists.
+13. Create or select a second player and confirm shop purchases and garage builds do not mix between players.
+14. Start battle from Garage and confirm the saved build still affects HP/speed/armor/damage/color/weapons.
