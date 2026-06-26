@@ -9,6 +9,9 @@ type ShopSceneData = {
 };
 
 const parts = partsData as Part[];
+const PARTS_PER_COLUMN = 6;
+const PART_ROW_HEIGHT = 42;
+const PART_COLUMN_WIDTH = 410;
 
 const STATUS_LABELS = {
   owned: 'OWNED',
@@ -69,7 +72,7 @@ export class ShopScene extends Phaser.Scene {
       fontSize: '18px',
     });
 
-    this.partsContainer = this.add.container(56, 150);
+    this.partsContainer = this.add.container(56, 142);
     this.statusText = this.add
       .text(270, 486, 'Click an available part to buy it.', {
         color: '#91a4bd',
@@ -79,8 +82,8 @@ export class ShopScene extends Phaser.Scene {
       })
       .setOrigin(0, 0.5);
 
-    this.createButton(82, 484, 'Back', () => this.scene.start('StartScene'));
-    this.createButton(710, 484, 'Garage', () =>
+    this.createButton(82, 496, 'Back', () => this.scene.start('StartScene'));
+    this.createButton(710, 496, 'Garage', () =>
       this.scene.start('GarageScene', { playerId: this.playerId }),
     );
 
@@ -103,17 +106,20 @@ export class ShopScene extends Phaser.Scene {
     );
 
     parts.forEach((part, index) => {
-      const rowY = 38 + index * 34;
+      const columnIndex = Math.floor(index / PARTS_PER_COLUMN);
+      const rowIndex = index % PARTS_PER_COLUMN;
+      const rowX = columnIndex * PART_COLUMN_WIDTH;
+      const rowY = 38 + rowIndex * PART_ROW_HEIGHT;
       const status = playerService.getPartPurchaseStatus(
         this.playerId ?? '',
         part.id,
       );
-      const row = this.add.text(0, rowY, this.formatPartRow(part, status), {
+      const row = this.add.text(rowX, rowY, this.formatPartRow(part, status), {
         backgroundColor: status === 'available' ? '#143652' : '#101820',
         color: this.getStatusColor(status),
-        fixedWidth: 820,
+        fixedWidth: 390,
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '16px',
+        fontSize: '15px',
         padding: { x: 10, y: 6 },
       });
 
@@ -174,7 +180,7 @@ export class ShopScene extends Phaser.Scene {
     status: ReturnType<typeof playerService.getPartPurchaseStatus>,
   ): string {
     const priceLabel = part.price === 0 ? 'free' : `${part.price} cr`;
-    return `${part.name} | ${part.slot} | ${priceLabel} | ${STATUS_LABELS[status]}`;
+    return `${part.name} | ${priceLabel} | ${STATUS_LABELS[status]}`;
   }
 
   private getStatusColor(
@@ -233,8 +239,11 @@ export class ShopScene extends Phaser.Scene {
     graphics.strokeRect(30, 70, 900, 420);
     graphics.lineStyle(1, 0x1d547d, 0.55);
 
-    for (let y = 118; y < 490; y += 46) {
+    for (let y = 118; y < 458; y += PART_ROW_HEIGHT) {
       graphics.lineBetween(30, y, 930, y);
     }
+
+    graphics.fillStyle(0x08111f, 0.9);
+    graphics.fillRect(30, 458, 900, 32);
   }
 }
