@@ -1,5 +1,6 @@
 import balanceData from '../../../data/static/balance.json';
 import partsData from '../../../data/static/parts.json';
+import type { MissionStatus } from '../types/Mission';
 import type { RobotBuild } from '../types/RobotBuild';
 import type {
   BattleResult,
@@ -45,6 +46,32 @@ export type PurchasePartResult =
   | {
       status: Exclude<PartPurchaseStatus, 'available'>;
       player: PlayerSave | null;
+    };
+
+export type MissionCompletion = {
+  id: string;
+  rewardMoney: number;
+  unlockPartIds: string[];
+};
+
+export type CompleteMissionResult =
+  | {
+      status: 'completed';
+      player: PlayerSave;
+      rewardMoney: number;
+      unlockedPartIds: string[];
+    }
+  | {
+      status: 'already-completed';
+      player: PlayerSave;
+      rewardMoney: 0;
+      unlockedPartIds: [];
+    }
+  | {
+      status: 'missing-player';
+      player: null;
+      rewardMoney: 0;
+      unlockedPartIds: [];
     };
 
 export class PlayerService {
@@ -202,6 +229,77 @@ export class PlayerService {
       wins: result === 'victory' ? player.wins + 1 : player.wins,
       losses: result === 'defeat' ? player.losses + 1 : player.losses,
     });
+  }
+
+  getMissionStatus(
+    playerId: string,
+    missionId: string,
+    requiredCompletedMissionId: string | null,
+  ): MissionStatus | 'missing-player' {
+    const player = this.loadPlayer(playerId);
+
+    if (player === null) {
+      return 'missing-player';
+    }
+
+    if (player.completedMissionIds.includes(missionId)) {
+      return 'completed';
+    }
+
+    if (
+      requiredCompletedMissionId !== null &&
+      !player.completedMissionIds.includes(requiredCompletedMissionId)
+    ) {
+      return 'locked';
+    }
+
+    return 'unlocked';
+  }
+
+  completeMission(
+    playerId: string,
+    mission: MissionCompletion,
+  ): CompleteMissionResult {
+    const player = this.loadPlayer(playerId);
+
+    if (player === null) {
+      return {
+        status: 'missing-player',
+        player: null,
+        rewardMoney: 0,
+        unlockedPartIds: [],
+      };
+    }
+
+    if (player.completedMissionIds.includes(mission.id)) {
+      return {
+        status: 'already-completed',
+        player,
+        rewardMoney: 0,
+        unlockedPartIds: [],
+      };
+    }
+
+    const updatedPlayer = {
+      ...player,
+      money: player.money + mission.rewardMoney,
+      completedMissionIds: this.mergeUniqueIds(player.completedMissionIds, [
+        mission.id,
+      ]),
+      unlockedPartIds: this.mergeUniqueIds(
+        player.unlockedPartIds,
+        mission.unlockPartIds,
+      ),
+    };
+
+    this.savePlayer(updatedPlayer);
+
+    return {
+      status: 'completed',
+      player: this.loadPlayer(playerId) ?? updatedPlayer,
+      rewardMoney: mission.rewardMoney,
+      unlockedPartIds: mission.unlockPartIds,
+    };
   }
 
   getPartPurchaseStatus(playerId: string, partId: string): PartPurchaseStatus {

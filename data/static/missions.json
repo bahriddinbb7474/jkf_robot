@@ -2,8 +2,38 @@
   {
     "id": "mission_1",
     "name": "Training Arena",
-    "enemyIds": ["bot_basic"],
-    "reward": 50,
-    "status": "stub"
+    "description": "Clear a basic patrol and prove the robot is ready.",
+    "requiredCompletedMissionId": null,
+    "rewardMoney": 50,
+    "unlockPartIds": [],
+    "waves": [{ "enemyIds": ["bot_basic", "bot_basic"] }],
+    "bossId": null
+  },
+  {
+    "id": "mission_2",
+    "name": "Outer Yard",
+    "description": "Handle faster bots guarding the supply route.",
+    "requiredCompletedMissionId": "mission_1",
+    "rewardMoney": 80,
+    "unlockPartIds": ["armor_bastion"],
+    "waves": [
+      { "enemyIds": ["bot_basic", "bot_fast"] },
+      { "enemyIds": ["bot_basic", "bot_fast", "bot_fast"] }
+    ],
+    "bossId": null
+  },
+  {
+    "id": "mission_3",
+    "name": "Boss Gate",
+    "description": "Break through the final guard and defeat the boss.",
+    "requiredCompletedMissionId": "mission_2",
+    "rewardMoney": 120,
+    "unlockPartIds": [],
+    "waves": [
+      { "enemyIds": ["bot_basic", "bot_basic"] },
+      { "enemyIds": ["bot_basic", "bot_fast", "bot_fast"] },
+      { "enemyIds": ["bot_basic", "bot_fast", "bot_shooter"] }
+    ],
+    "bossId": "boss_basic"
   }
 ]
