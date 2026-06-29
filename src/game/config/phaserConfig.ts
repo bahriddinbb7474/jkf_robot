@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from '../scenes/BootScene';
+import { BonusQuestionScene } from '../scenes/BonusQuestionScene';
 import { BattleScene } from '../scenes/BattleScene';
 import { GarageScene } from '../scenes/GarageScene';
 import { MissionSelectScene } from '../scenes/MissionSelectScene';
@@ -25,5 +26,6 @@ export const phaserConfig: Phaser.Types.Core.GameConfig = {
     MissionSelectScene,
     BattleScene,
     RewardScene,
+    BonusQuestionScene,
   ],
 };

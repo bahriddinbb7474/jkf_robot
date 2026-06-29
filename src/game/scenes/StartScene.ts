@@ -7,6 +7,7 @@ export class StartScene extends Phaser.Scene {
   private nameBuffer = '';
   private nameInputText?: Phaser.GameObjects.Text;
   private playerListContainer?: Phaser.GameObjects.Container;
+  private bonusButton?: Phaser.GameObjects.Text;
   private missionsButton?: Phaser.GameObjects.Text;
   private garageButton?: Phaser.GameObjects.Text;
   private shopButton?: Phaser.GameObjects.Text;
@@ -32,7 +33,7 @@ export class StartScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(centerX, 100, 'Stage 4 - Players and Save', {
+      .text(centerX, 100, 'Build. Battle. Learn.', {
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
         fontSize: '24px',
@@ -92,8 +93,27 @@ export class StartScene extends Phaser.Scene {
 
     this.playerListContainer = this.add.container(90, 300);
 
+    this.bonusButton = this.add
+      .text(480, 470, 'Bonus', {
+        backgroundColor: '#143652',
+        color: '#f4f7fb',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '22px',
+        padding: { x: 22, y: 12 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    this.bonusButton.on('pointerover', () =>
+      this.bonusButton?.setBackgroundColor(
+        this.selectedPlayerId ? '#1d547d' : '#2a3440',
+      ),
+    );
+    this.bonusButton.on('pointerout', () => this.updateActionButtonState());
+    this.bonusButton.on('pointerup', () => this.openBonusQuestions());
+
     this.shopButton = this.add
-      .text(620, 470, 'Shop', {
+      .text(595, 470, 'Shop', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -112,7 +132,7 @@ export class StartScene extends Phaser.Scene {
     this.shopButton.on('pointerup', () => this.openShop());
 
     this.garageButton = this.add
-      .text(740, 470, 'Garage', {
+      .text(720, 470, 'Garage', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -131,7 +151,7 @@ export class StartScene extends Phaser.Scene {
     this.garageButton.on('pointerup', () => this.openGarage());
 
     this.missionsButton = this.add
-      .text(860, 470, 'Missions', {
+      .text(870, 470, 'Missions', {
         backgroundColor: '#143652',
         color: '#f4f7fb',
         fontFamily: 'system-ui, sans-serif',
@@ -152,7 +172,7 @@ export class StartScene extends Phaser.Scene {
     this.statusText = this.add
       .text(90, 462, '', {
         color: '#91a4bd',
-        fixedWidth: 560,
+        fixedWidth: 330,
         fontFamily: 'system-ui, sans-serif',
         fontSize: '18px',
       })
@@ -304,6 +324,18 @@ export class StartScene extends Phaser.Scene {
     this.scene.start('ShopScene', { playerId: this.selectedPlayerId });
   }
 
+  private openBonusQuestions(): void {
+    if (this.selectedPlayerId === null) {
+      this.setStatus('Create or select a player first.');
+      return;
+    }
+
+    this.scene.start('BonusQuestionScene', {
+      playerId: this.selectedPlayerId,
+      source: 'menu',
+    });
+  }
+
   private updateNameInputText(): void {
     const label =
       this.nameBuffer.length > 0 ? this.nameBuffer : 'Type player name...';
@@ -314,6 +346,10 @@ export class StartScene extends Phaser.Scene {
   }
 
   private updateActionButtonState(): void {
+    this.bonusButton?.setBackgroundColor(
+      this.selectedPlayerId ? '#143652' : '#2a3440',
+    );
+    this.bonusButton?.setColor(this.selectedPlayerId ? '#f4f7fb' : '#91a4bd');
     this.missionsButton?.setBackgroundColor(
       this.selectedPlayerId ? '#143652' : '#2a3440',
     );
