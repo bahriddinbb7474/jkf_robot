@@ -1,6 +1,7 @@
 import balanceData from '../../../data/static/balance.json';
 import partsData from '../../../data/static/parts.json';
 import type { MissionStatus } from '../types/Mission';
+import type { QuestionSubject } from '../types/Question';
 import type { RobotBuild } from '../types/RobotBuild';
 import type {
   BattleResult,
@@ -25,6 +26,13 @@ type StaticPart = {
 
 type BalanceConfig = {
   startingMoney: number;
+  rewards: {
+    bonusQuestion: number;
+  };
+};
+
+type PlayerSaveCandidate = Omit<PlayerSave, 'questionStats'> & {
+  questionStats?: unknown;
 };
 
 const balance = balanceData as BalanceConfig;
@@ -72,6 +80,18 @@ export type CompleteMissionResult =
       player: null;
       rewardMoney: 0;
       unlockedPartIds: [];
+    };
+
+export type RecordQuestionAnswerResult =
+  | {
+      status: 'recorded';
+      player: PlayerSave;
+      rewardMoney: number;
+    }
+  | {
+      status: 'missing-player';
+      player: null;
+      rewardMoney: 0;
     };
 
 export class PlayerService {
@@ -229,6 +249,51 @@ export class PlayerService {
       wins: result === 'victory' ? player.wins + 1 : player.wins,
       losses: result === 'defeat' ? player.losses + 1 : player.losses,
     });
+  }
+
+  recordQuestionAnswer(
+    playerId: string,
+    subject: QuestionSubject,
+    correct: boolean,
+  ): RecordQuestionAnswerResult {
+    const player = this.loadPlayer(playerId);
+
+    if (player === null) {
+      return {
+        status: 'missing-player',
+        player: null,
+        rewardMoney: 0,
+      };
+    }
+
+    const rewardMoney = correct ? balance.rewards.bonusQuestion : 0;
+    const questionStats: QuestionStats = {
+      answered: player.questionStats.answered + 1,
+      correct: player.questionStats.correct + (correct ? 1 : 0),
+      mathAnswered:
+        player.questionStats.mathAnswered + (subject === 'math' ? 1 : 0),
+      mathCorrect:
+        player.questionStats.mathCorrect +
+        (subject === 'math' && correct ? 1 : 0),
+      englishAnswered:
+        player.questionStats.englishAnswered + (subject === 'english' ? 1 : 0),
+      englishCorrect:
+        player.questionStats.englishCorrect +
+        (subject === 'english' && correct ? 1 : 0),
+    };
+    const updatedPlayer = {
+      ...player,
+      money: player.money + rewardMoney,
+      questionStats,
+    };
+
+    this.savePlayer(updatedPlayer);
+
+    return {
+      status: 'recorded',
+      player: this.loadPlayer(playerId) ?? updatedPlayer,
+      rewardMoney,
+    };
   }
 
   getMissionStatus(
@@ -412,7 +477,7 @@ export class PlayerService {
     };
   }
 
-  private normalizePlayerSave(player: PlayerSave): PlayerSave {
+  private normalizePlayerSave(player: PlayerSaveCandidate): PlayerSave {
     const defaultOwnedPartIds = this.getDefaultPartIds();
 
     return {
@@ -425,10 +490,11 @@ export class PlayerService {
         player.ownedPartIds,
         defaultOwnedPartIds,
       ),
+      questionStats: this.normalizeQuestionStats(player.questionStats),
     };
   }
 
-  private isValidPlayerSave(player: unknown): player is PlayerSave {
+  private isValidPlayerSave(player: unknown): player is PlayerSaveCandidate {
     if (!this.isRecord(player)) {
       return false;
     }
@@ -445,7 +511,6 @@ export class PlayerService {
       Array.isArray(player.unlockedPartIds) &&
       Array.isArray(player.ownedPartIds) &&
       this.isValidRobotBuild(player.currentBuild) &&
-      this.isValidQuestionStats(player.questionStats) &&
       typeof player.createdAt === 'string' &&
       typeof player.updatedAt === 'string'
     );
@@ -471,14 +536,34 @@ export class PlayerService {
       return false;
     }
 
+    const {
+      answered,
+      correct,
+      mathAnswered,
+      mathCorrect,
+      englishAnswered,
+      englishCorrect,
+    } = stats;
+
     return (
-      typeof stats.answered === 'number' &&
-      typeof stats.correct === 'number' &&
-      typeof stats.mathAnswered === 'number' &&
-      typeof stats.mathCorrect === 'number' &&
-      typeof stats.englishAnswered === 'number' &&
-      typeof stats.englishCorrect === 'number'
+      this.isNonNegativeInteger(answered) &&
+      this.isNonNegativeInteger(correct) &&
+      this.isNonNegativeInteger(mathAnswered) &&
+      this.isNonNegativeInteger(mathCorrect) &&
+      this.isNonNegativeInteger(englishAnswered) &&
+      this.isNonNegativeInteger(englishCorrect) &&
+      correct <= answered &&
+      mathCorrect <= mathAnswered &&
+      englishCorrect <= englishAnswered &&
+      answered === mathAnswered + englishAnswered &&
+      correct === mathCorrect + englishCorrect
     );
+  }
+
+  private normalizeQuestionStats(stats: unknown): QuestionStats {
+    return this.isValidQuestionStats(stats)
+      ? stats
+      : this.createDefaultQuestionStats();
   }
 
   private createDefaultBuild(): RobotBuild {
@@ -558,6 +643,10 @@ export class PlayerService {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
+  }
+
+  private isNonNegativeInteger(value: unknown): value is number {
+    return Number.isInteger(value) && Number(value) >= 0;
   }
 
   private mergeUniqueIds(existingIds: string[], addedIds: string[]): string[] {
