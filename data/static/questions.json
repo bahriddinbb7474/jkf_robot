@@ -1,30 +1,272 @@
 [
   {
-    "id": "math_1",
+    "id": "math_easy_01",
     "subject": "math",
+    "difficulty": "easy",
     "prompt": "What is 7 + 8?",
     "options": ["13", "14", "15", "16"],
     "correctOptionIndex": 2
   },
   {
-    "id": "math_2",
+    "id": "math_easy_02",
     "subject": "math",
-    "prompt": "What is 6 x 4?",
-    "options": ["20", "22", "24", "26"],
+    "difficulty": "easy",
+    "prompt": "What is 9 x 6?",
+    "options": ["45", "48", "54", "56"],
     "correctOptionIndex": 2
   },
   {
-    "id": "english_1",
-    "subject": "english",
-    "prompt": "Choose the plural form of robot.",
-    "options": ["robotes", "robots", "robot's", "robot"],
+    "id": "math_easy_03",
+    "subject": "math",
+    "difficulty": "easy",
+    "prompt": "What is 72 divided by 8?",
+    "options": ["8", "9", "10", "12"],
     "correctOptionIndex": 1
   },
   {
-    "id": "english_2",
+    "id": "math_easy_04",
+    "subject": "math",
+    "difficulty": "easy",
+    "prompt": "What is 45 - 19?",
+    "options": ["24", "25", "26", "27"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "math_easy_05",
+    "subject": "math",
+    "difficulty": "easy",
+    "prompt": "A rectangle is 6 cm long and 4 cm wide. What is its perimeter?",
+    "options": ["10 cm", "20 cm", "24 cm", "28 cm"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "math_medium_01",
+    "subject": "math",
+    "difficulty": "medium",
+    "prompt": "Solve: 3x + 5 = 20.",
+    "options": ["x = 3", "x = 4", "x = 5", "x = 6"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "math_medium_02",
+    "subject": "math",
+    "difficulty": "medium",
+    "prompt": "What is 25% of 80?",
+    "options": ["15", "20", "25", "30"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "math_medium_03",
+    "subject": "math",
+    "difficulty": "medium",
+    "prompt": "What is the average of 6, 8, 10, and 12?",
+    "options": ["8", "9", "10", "11"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "math_medium_04",
+    "subject": "math",
+    "difficulty": "medium",
+    "prompt": "What is 2 to the power of 5?",
+    "options": ["10", "16", "25", "32"],
+    "correctOptionIndex": 3
+  },
+  {
+    "id": "math_medium_05",
+    "subject": "math",
+    "difficulty": "medium",
+    "prompt": "What is 3/4 + 1/8?",
+    "options": ["4/12", "5/8", "7/8", "1"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "math_hard_01",
+    "subject": "math",
+    "difficulty": "hard",
+    "prompt": "A triangle has a base of 12 cm and a height of 7 cm. What is its area?",
+    "options": ["19 cm²", "42 cm²", "84 cm²", "96 cm²"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "math_hard_02",
+    "subject": "math",
+    "difficulty": "hard",
+    "prompt": "What is the square root of 196?",
+    "options": ["12", "13", "14", "16"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "math_hard_03",
+    "subject": "math",
+    "difficulty": "hard",
+    "prompt": "Two numbers are in the ratio 3:5 and total 64. What is the smaller number?",
+    "options": ["16", "24", "32", "40"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "math_hard_04",
+    "subject": "math",
+    "difficulty": "hard",
+    "prompt": "What is the positive solution of x² - 9 = 0?",
+    "options": ["1", "3", "6", "9"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "math_hard_05",
+    "subject": "math",
+    "difficulty": "hard",
+    "prompt": "A robot travels at 72 km/h for 2.5 hours. How far does it travel?",
+    "options": ["144 km", "160 km", "180 km", "200 km"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "english_easy_01",
     "subject": "english",
-    "prompt": "Choose the opposite of fast.",
-    "options": ["quick", "strong", "slow", "small"],
+    "difficulty": "easy",
+    "prompt": "Choose the plural form of child.",
+    "options": ["childs", "childes", "children", "childrens"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "english_easy_02",
+    "subject": "english",
+    "difficulty": "easy",
+    "prompt": "Choose the past tense of go.",
+    "options": ["goed", "gone", "went", "going"],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "english_easy_03",
+    "subject": "english",
+    "difficulty": "easy",
+    "prompt": "Choose the opposite of ancient.",
+    "options": ["old", "modern", "broken", "quiet"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "english_easy_04",
+    "subject": "english",
+    "difficulty": "easy",
+    "prompt": "Choose the correct article: We waited for ___ hour.",
+    "options": ["a", "an", "the", "no article"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "english_easy_05",
+    "subject": "english",
+    "difficulty": "easy",
+    "prompt": "Which pronoun can replace Maria in a sentence?",
+    "options": ["he", "she", "it", "they"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "english_medium_01",
+    "subject": "english",
+    "difficulty": "medium",
+    "prompt": "Choose the grammatically correct sentence.",
+    "options": [
+      "He don't like puzzles.",
+      "He doesn't likes puzzles.",
+      "He doesn't like puzzles.",
+      "He not like puzzles."
+    ],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "english_medium_02",
+    "subject": "english",
+    "difficulty": "medium",
+    "prompt": "Choose the closest meaning of reluctant.",
+    "options": ["unwilling", "excited", "careless", "certain"],
+    "correctOptionIndex": 0
+  },
+  {
+    "id": "english_medium_03",
+    "subject": "english",
+    "difficulty": "medium",
+    "prompt": "Choose the comparative form of good.",
+    "options": ["gooder", "more good", "best", "better"],
+    "correctOptionIndex": 3
+  },
+  {
+    "id": "english_medium_04",
+    "subject": "english",
+    "difficulty": "medium",
+    "prompt": "Which sentence is in the passive voice?",
+    "options": [
+      "Alex repaired the robot.",
+      "The robot was repaired by Alex.",
+      "Alex is repairing the robot.",
+      "The robot needs a repair."
+    ],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "english_medium_05",
+    "subject": "english",
+    "difficulty": "medium",
+    "prompt": "Complete the sentence: If I had more time, I ___ learn another language.",
+    "options": ["will", "would", "am", "have"],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "english_hard_01",
+    "subject": "english",
+    "difficulty": "hard",
+    "prompt": "Choose the sentence that uses affect correctly.",
+    "options": [
+      "The weather can affect our plans.",
+      "The weather had a strong affect.",
+      "Our plans were an affect of rain.",
+      "Rain is a common affect."
+    ],
+    "correctOptionIndex": 0
+  },
+  {
+    "id": "english_hard_02",
+    "subject": "english",
+    "difficulty": "hard",
+    "prompt": "What does the expression break the ice mean?",
+    "options": [
+      "Damage something frozen",
+      "Begin a friendly conversation",
+      "End an argument",
+      "Make a difficult decision"
+    ],
+    "correctOptionIndex": 1
+  },
+  {
+    "id": "english_hard_03",
+    "subject": "english",
+    "difficulty": "hard",
+    "prompt": "Which sentence is in the present perfect tense?",
+    "options": [
+      "They finish the mission.",
+      "They finished the mission.",
+      "They have finished the mission.",
+      "They will finish the mission."
+    ],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "english_hard_04",
+    "subject": "english",
+    "difficulty": "hard",
+    "prompt": "Choose the grammatically correct sentence.",
+    "options": [
+      "Despite it was raining, we left.",
+      "Despite of the rain, we left.",
+      "Despite the rain, we left.",
+      "Despite to rain, we left."
+    ],
+    "correctOptionIndex": 2
+  },
+  {
+    "id": "english_hard_05",
+    "subject": "english",
+    "difficulty": "hard",
+    "prompt": "Which word is the adverb in this sentence: The robot moved quickly across the arena?",
+    "options": ["robot", "moved", "quickly", "arena"],
     "correctOptionIndex": 2
   }
 ]
