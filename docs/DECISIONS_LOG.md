@@ -125,3 +125,16 @@
 - Mission rewards are idempotent: replaying an already completed mission can record a win but does not grant mission money or unlocks again.
 - Mission unlocks do not grant ownership. Unlocked paid parts become purchasable in Shop and still require money.
 - RewardScene is a simple post-battle navigation screen for Missions, Garage, Shop, and Retry.
+
+## Stage 8
+
+- Stage 8 uses a fixed static bank of 30 multiple-choice questions: 15 math and 15 English, evenly distributed across easy, medium, and hard difficulty.
+- Every question has exactly four options and one indexed correct answer. Questions are selected randomly and may repeat in the MVP.
+- Question rewards are configured only through `data/static/balance.json`; question data does not contain economy values.
+- A correct answer grants the configured money reward. An incorrect answer grants no money and applies no penalty.
+- `PlayerService` owns the atomic money/statistics update; scenes do not modify player saves directly.
+- Player saves track total and per-subject answered/correct counters. `answeredQuestionIds` and anti-farming logic are intentionally deferred.
+- Missing, malformed, negative, or internally inconsistent legacy question statistics normalize to the default zero statistics without invalidating the rest of the player save.
+- BonusQuestionScene accepts one answer per displayed question, blocks repeat payout from additional clicks, and supports repeat standalone questions from StartScene.
+- Victory RewardScene offers the bonus as an optional action. Existing Missions, Retry, Garage, and Shop navigation remains available, and defeat does not offer a post-mission bonus.
+- Backend, SQLite, AI-generated runtime questions, admin tools, and complex learning systems remain outside Stage 8.

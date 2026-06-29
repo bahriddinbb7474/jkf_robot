@@ -82,3 +82,26 @@
 15. Start mission 3 and confirm mission waves, boss, victory/defeat, weapons 1/2/3, and R retry still work.
 16. Create or select a second player and confirm mission completions, money, unlocks, purchases, and builds do not mix.
 17. Reload the browser and confirm mission progress persists.
+
+## Stage 8
+
+1. Run `npm.cmd run format`.
+2. Run `npm.cmd run build`.
+3. Run `npm.cmd run lint`.
+4. Confirm `questions.json` contains 30 unique questions: 15 math and 15 English, with 5 easy, 5 medium, and 5 hard questions per subject.
+5. Select a player on StartScene and open Bonus.
+6. Confirm BonusQuestionScene shows the player, current money, answer statistics, subject, difficulty, prompt, and exactly four options.
+7. Select a correct answer and confirm it is highlighted, the configured bonus is shown, money increases once, and total/subject correct and answered counters increase once.
+8. Click the selected answer and other answers again and confirm money and statistics do not change a second time.
+9. Click Continue and confirm a new standalone question is shown with the updated saved money and statistics.
+10. Select an incorrect answer and confirm the correct answer is shown, answered counters increase once, and money/correct counters do not change.
+11. Click Back and confirm StartScene opens with the same selected player.
+12. Reload the browser, reopen Bonus, and confirm money and statistics persist.
+13. Create or select a second player and confirm bonus money and statistics do not mix between profiles.
+14. Remove `questionStats` from a stored legacy player, reload the game, and confirm the player remains available with all question counters normalized to zero.
+15. Replace `questionStats` with damaged or inconsistent values, reload the game, and confirm the player remains available with all question counters normalized to zero.
+16. Win an unlocked mission and confirm RewardScene shows Bonus Question plus the existing Missions, Retry, Garage, and Shop actions.
+17. Open the post-victory Bonus Question, answer it, and confirm Continue returns to Missions with the result saved.
+18. Win a previously completed mission and confirm its mission reward remains zero while a separate optional bonus question is still available.
+19. Lose a mission and confirm RewardScene does not show Bonus Question and no question statistics or bonus money change.
+20. Skip the bonus after victory by choosing Missions, Retry, Garage, or Shop and confirm progression remains usable.
