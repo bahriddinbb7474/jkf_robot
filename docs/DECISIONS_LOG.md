@@ -135,6 +135,7 @@
 - `PlayerService` owns the atomic money/statistics update; scenes do not modify player saves directly.
 - Player saves track total and per-subject answered/correct counters. `answeredQuestionIds` and anti-farming logic are intentionally deferred.
 - Missing, malformed, negative, or internally inconsistent legacy question statistics normalize to the default zero statistics without invalidating the rest of the player save.
-- BonusQuestionScene accepts one answer per displayed question, blocks repeat payout from additional clicks, and supports repeat standalone questions from StartScene.
+- BonusQuestionScene is available only after mission victory from RewardScene, accepts one answer per displayed question, blocks repeat payout from additional clicks, and returns to Missions.
+- StartScene has no bonus-question or practice-mode entry. Practice mode remains outside Stage 8.
 - Victory RewardScene offers the bonus as an optional action. Existing Missions, Retry, Garage, and Shop navigation remains available, and defeat does not offer a post-mission bonus.
 - Backend, SQLite, AI-generated runtime questions, admin tools, and complex learning systems remain outside Stage 8.

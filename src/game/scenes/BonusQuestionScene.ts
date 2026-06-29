@@ -6,14 +6,14 @@ import type { Question } from '../types/Question';
 
 type BonusQuestionSceneData = {
   playerId?: string;
-  source?: 'menu' | 'reward';
+  source?: 'reward';
 };
 
 const questions = questionsData as Question[];
 
 export class BonusQuestionScene extends Phaser.Scene {
   private playerId: string | null = null;
-  private source: 'menu' | 'reward' = 'menu';
+  private openedFromReward = false;
   private playerSave: PlayerSave | null = null;
   private question: Question | null = null;
   private answered = false;
@@ -29,7 +29,7 @@ export class BonusQuestionScene extends Phaser.Scene {
 
   init(data: BonusQuestionSceneData): void {
     this.playerId = data.playerId ?? null;
-    this.source = data.source ?? 'menu';
+    this.openedFromReward = data.source === 'reward';
     this.playerSave = null;
     this.question = null;
     this.answered = false;
@@ -41,7 +41,7 @@ export class BonusQuestionScene extends Phaser.Scene {
       ? playerService.loadPlayer(this.playerId)
       : null;
 
-    if (!this.playerSave || questions.length === 0) {
+    if (!this.openedFromReward || !this.playerSave || questions.length === 0) {
       this.scene.start('StartScene');
       return;
     }
@@ -226,21 +226,11 @@ export class BonusQuestionScene extends Phaser.Scene {
       return;
     }
 
-    if (this.source === 'reward') {
-      this.openMissions();
-      return;
-    }
-
-    this.scene.restart({ playerId: this.playerId, source: 'menu' });
+    this.openMissions();
   }
 
   private goBack(): void {
-    if (this.source === 'reward') {
-      this.openMissions();
-      return;
-    }
-
-    this.scene.start('StartScene');
+    this.openMissions();
   }
 
   private openMissions(): void {
