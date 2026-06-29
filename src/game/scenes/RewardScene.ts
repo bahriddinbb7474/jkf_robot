@@ -116,6 +116,15 @@ export class RewardScene extends Phaser.Scene {
       },
     );
 
+    if (success) {
+      this.createButton(480, 416, 'Bonus Question', () =>
+        this.scene.start('BonusQuestionScene', {
+          playerId: this.playerId,
+          source: 'reward',
+        }),
+      );
+    }
+
     this.createButton(92, 496, 'Missions', () =>
       this.scene.start('MissionSelectScene', {
         playerId: this.playerId,
